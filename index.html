@@ -2,11 +2,12 @@
 <html lang="ar" dir="rtl" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>زهرة الإيمان - نظام المبيعات</title>
     
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     
@@ -21,8 +22,8 @@
                 extend: {
                     fontFamily: { sans: ['Tajawal', 'sans-serif'] },
                     colors: {
-                        primary: '#10b981', // Emerald
-                        secondary: '#06b6d4', // Cyan
+                        primary: '#10b981',
+                        secondary: '#06b6d4',
                     }
                 }
             }
@@ -34,70 +35,76 @@
             overflow: hidden;
             -webkit-tap-highlight-color: transparent;
             transition: background-color 0.3s ease, color 0.3s ease;
+            touch-action: manipulation; /* Prevent iOS double-tap zoom */
         }
 
-        /* Glassmorphism Adapting to Light/Dark */
+        /* Enhanced Glassmorphism */
         .glass-card {
             background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             border-radius: 1.5rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .dark .glass-card {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
         .glass-input {
-            background: rgba(0, 0, 0, 0.05);
+            background: rgba(0, 0, 0, 0.03);
             border: 1px solid rgba(0, 0, 0, 0.1);
             border-radius: 1rem;
             color: #1e293b;
             transition: all 0.3s ease;
         }
         .dark .glass-input {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.25);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: white;
         }
-        .glass-input:focus { border-color: #10b981; outline: none; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); }
+        .glass-input:focus { border-color: #10b981; outline: none; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
 
-        /* Animations */
-        .view-section { display: none; animation: fadeIn 0.4s ease forwards; }
-        .view-section.active { display: block; }
+        /* Smooth View Transitions */
+        .view-section { display: none; opacity: 0; transform: translateY(10px); transition: opacity 0.4s ease, transform 0.4s ease; }
+        .view-section.active { display: block; opacity: 1; transform: translateY(0); animation: fadeIn 0.4s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .modal-overlay {
-            display: none; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
-            position: fixed; inset: 0; z-index: 50;
+            display: none; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px);
+            position: fixed; inset: 0; z-index: 50; transition: opacity 0.3s ease;
         }
-        .modal-overlay.active { display: flex; }
+        .modal-overlay.active { display: flex; animation: fadeOverlay 0.3s forwards; }
+        @keyframes fadeOverlay { from { opacity: 0; } to { opacity: 1; } }
         
         .bottom-modal-content {
             position: absolute; bottom: -100%; left: 0; right: 0;
             border-radius: 2rem 2rem 0 0;
-            padding: 1.5rem; transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 1.5rem; transition: bottom 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .modal-overlay.active .bottom-modal-content { bottom: 0; }
 
-        /* Scrollbar hide */
+        /* Scrollbars */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Toast Container */
-        #toast-container { position: fixed; top: 1rem; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; }
-        .toast { padding: 12px 20px; border-radius: 12px; display: flex; align-items: center; gap: 10px; animation: fadeInDown 0.3s ease forwards; font-weight: 500;}
-        .dark .toast { background: rgba(15,23,42,0.9); border: 1px solid rgba(255,255,255,0.1); color: white; }
-        html:not(.dark) .toast { background: white; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.1); color: #1e293b; }
-        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        /* Toasts */
+        #toast-container { position: fixed; top: env(safe-area-inset-top, 1rem); left: 50%; transform: translateX(-50%); z-index: 100; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
+        .toast { pointer-events: auto; padding: 14px 20px; border-radius: 14px; display: flex; align-items: center; gap: 12px; animation: fadeInDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .dark .toast { background: rgba(15,23,42,0.95); border: 1px solid rgba(255,255,255,0.1); color: white; }
+        html:not(.dark) .toast { background: white; border: 1px solid rgba(0,0,0,0.1); color: #1e293b; }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-        /* Background Orbs */
-        .bg-orb-1 { position: absolute; top: -50px; right: -50px; width: 250px; height: 250px; background: radial-gradient(circle, rgba(16,185,129,0.2) 0%, rgba(0,0,0,0) 70%); border-radius: 50%; filter: blur(40px); z-index: -1; }
-        .bg-orb-2 { position: absolute; bottom: 50px; left: -50px; width: 300px; height: 300px; background: radial-gradient(circle, rgba(6,182,212,0.15) 0%, rgba(0,0,0,0) 70%); border-radius: 50%; filter: blur(40px); z-index: -1; }
+        /* Background Graphics */
+        .bg-orb-1 { position: absolute; top: -10%; right: -10%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(16,185,129,0.2) 0%, rgba(0,0,0,0) 70%); border-radius: 50%; filter: blur(50px); z-index: -1; pointer-events: none; }
+        .bg-orb-2 { position: absolute; bottom: 0; left: -10%; width: 350px; height: 350px; background: radial-gradient(circle, rgba(6,182,212,0.15) 0%, rgba(0,0,0,0) 70%); border-radius: 50%; filter: blur(50px); z-index: -1; pointer-events: none; }
+
+        /* Sync Pulse Indicator */
+        .sync-pulse { animation: pulseWarning 1.5s infinite cubic-bezier(0.4, 0, 0.6, 1); }
+        @keyframes pulseWarning { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(1.2); } }
     </style>
 </head>
 <body class="h-screen w-full flex justify-center bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100">
@@ -112,12 +119,8 @@
             </div>
             <h2 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-500 mb-2">زهرة الإيمان</h2>
             <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">أهلاً بك! يرجى إدخال اسم المستخدم للبدء في النظام.</p>
-            
             <input type="text" id="username-input" class="glass-input w-full p-3 text-center font-bold mb-4" placeholder="اسم الكاشير أو مدير المحل...">
-            
-            <button onclick="saveUsername()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-500/30 active:scale-95 transition">
-                دخول النظام
-            </button>
+            <button onclick="saveUsername()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-500/30 active:scale-95 transition">دخول النظام</button>
         </div>
     </div>
 
@@ -129,8 +132,11 @@
                 <p id="header-user" class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium"></p>
             </div>
             <div class="flex items-center gap-3">
-                <span id="sync-status" class="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] transition-colors duration-300"></span>
-                <button onclick="toggleTheme()" class="w-10 h-10 rounded-full glass-card flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10 transition">
+                <div class="relative flex h-4 w-4 items-center justify-center">
+                    <span id="sync-ping" class="absolute inline-flex h-full w-full rounded-full opacity-0"></span>
+                    <span id="sync-status" class="relative inline-flex rounded-full h-3 w-3 bg-red-500 shadow-[0_0_8px_#ef4444] transition-all duration-300"></span>
+                </div>
+                <button onclick="toggleTheme()" class="w-10 h-10 rounded-full glass-card flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10 transition active:scale-90">
                     <i id="theme-icon" class="fa-solid fa-moon"></i>
                 </button>
             </div>
@@ -141,7 +147,10 @@
             <section id="view-dashboard" class="view-section active space-y-6">
                 <div class="glass-card p-6 relative overflow-hidden bg-white/50 dark:bg-slate-800/50">
                     <div class="absolute top-0 left-0 w-32 h-32 bg-emerald-500/10 rounded-full filter blur-3xl"></div>
-                    <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">مبيعات اليوم</p>
+                    <div class="flex justify-between items-start">
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">مبيعات اليوم</p>
+                        <span id="offline-badge" class="hidden bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 text-[10px] font-bold px-2 py-1 rounded-md">أوفلاين</span>
+                    </div>
                     <h2 class="text-4xl font-black mt-2 mb-4 text-slate-800 dark:text-white" id="today-total-sales">0 <span class="text-xl text-slate-400">ج.م</span></h2>
                     
                     <div class="flex flex-col gap-3 border-t border-slate-200 dark:border-slate-700/50 pt-4 mt-2">
@@ -178,17 +187,15 @@
                         <h3 class="font-bold text-lg text-slate-800 dark:text-white">أحدث المبيعات</h3>
                         <button onclick="switchView('view-archive')" class="text-emerald-500 text-xs font-bold">عرض السجل</button>
                     </div>
-                    <div id="recent-transactions-list" class="space-y-3">
-                        </div>
+                    <div id="recent-transactions-list" class="space-y-3"></div>
                 </div>
             </section>
 
             <section id="view-archive" class="view-section space-y-6">
-                <div class="glass-card p-3 flex gap-2 bg-white dark:bg-slate-800/80">
+                <div class="glass-card p-3 flex gap-2 bg-white dark:bg-slate-800/80 sticky top-0 z-20">
                     <input type="text" id="search-input" placeholder="بحث باسم المنتج أو القسم..." class="glass-input flex-1 px-4 py-2 text-sm" onkeyup="filterArchive()">
                 </div>
-                <div id="archive-list" class="space-y-4">
-                    </div>
+                <div id="archive-list" class="space-y-4"></div>
             </section>
 
             <section id="view-stats" class="view-section space-y-6">
@@ -198,73 +205,61 @@
                 </div>
                 <div class="glass-card p-5 bg-white dark:bg-slate-800/80">
                     <h3 class="font-bold mb-4">الأقسام الأكثر مبيعاً</h3>
-                    <div class="space-y-4" id="best-categories">
-                        </div>
+                    <div class="space-y-4" id="best-categories"></div>
                 </div>
             </section>
 
             <section id="view-settings" class="view-section space-y-4">
                 <h2 class="text-2xl font-bold mb-4">إعدادات الحساب</h2>
-                
                 <div class="glass-card p-5 space-y-5 bg-white dark:bg-slate-800/80">
                     <div class="flex items-center gap-4 border-b border-slate-200 dark:border-slate-700 pb-4">
                         <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center text-xl font-bold shadow-inner">
                             <i class="fa-solid fa-user-tie"></i>
                         </div>
                         <div>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">اسم الكاشير / المالك</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">الكاشير النشط</p>
                             <h3 class="font-bold text-lg" id="settings-username">---</h3>
                         </div>
-                        <button onclick="editUsername()" class="mr-auto text-slate-400 hover:text-emerald-500"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="editUsername()" class="mr-auto text-slate-400 hover:text-emerald-500 p-2"><i class="fa-solid fa-pen"></i></button>
                     </div>
 
                     <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-4">
-                        <div class="flex items-center gap-3"><i class="fa-solid fa-bullseye text-teal-500"></i><span class="font-medium">تحديد الهدف اليومي</span></div>
+                        <div class="flex items-center gap-3"><i class="fa-solid fa-bullseye text-teal-500 w-5"></i><span class="font-medium">الهدف اليومي</span></div>
                         <input type="number" id="daily-target-input" value="1000" class="glass-input w-24 text-center py-1 text-sm font-bold" onchange="saveTarget(this.value)">
                     </div>
                     
                     <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-4">
-                        <div class="flex items-center gap-3"><i class="fa-solid fa-cloud text-emerald-500"></i><span class="font-medium">مزامنة البيانات</span></div>
-                        <button onclick="forceSync()" class="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-lg text-xs font-bold">مزامنة الآن</button>
+                        <div class="flex items-center gap-3"><i class="fa-solid fa-cloud-arrow-up text-emerald-500 w-5"></i><span class="font-medium">المزامنة السحابية</span></div>
+                        <button onclick="forceSync()" class="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-lg text-xs font-bold active:scale-95 transition">مزامنة الآن</button>
                     </div>
 
-                    <div class="flex justify-between items-center text-red-500 pt-2 cursor-pointer active:opacity-50" onclick="clearData()">
-                        <div class="flex items-center gap-3"><i class="fa-solid fa-trash-can"></i><span class="font-bold">حذف جميع السجلات</span></div>
+                    <div class="flex justify-between items-center text-red-500 pt-2 cursor-pointer active:opacity-50 transition" onclick="clearData()">
+                        <div class="flex items-center gap-3"><i class="fa-solid fa-trash-can w-5"></i><span class="font-bold">مسح الكاش الآلي</span></div>
                     </div>
                 </div>
             </section>
 
         </main>
 
-        <nav class="absolute bottom-0 w-full glass-card rounded-b-none rounded-t-3xl bg-white/80 dark:bg-slate-900/80 z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] border-b-0 border-x-0 border-t border-slate-200 dark:border-slate-700/50 pb-2">
-            <div class="relative flex justify-around items-center h-16 px-2">
-                
+        <nav class="absolute bottom-0 w-full glass-card rounded-b-none rounded-t-3xl bg-white/90 dark:bg-slate-900/90 z-30 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] border-b-0 border-x-0 border-t border-slate-200 dark:border-slate-700/50 pb-safe pt-1">
+            <div class="relative flex justify-around items-center h-16 px-2 mb-1">
                 <button onclick="switchView('view-dashboard')" class="nav-btn active flex flex-col items-center gap-1 text-emerald-500 w-14 transition-colors">
-                    <i class="fa-solid fa-house text-[18px]"></i>
-                    <span class="text-[10px] font-bold">الرئيسية</span>
+                    <i class="fa-solid fa-house text-[18px]"></i><span class="text-[10px] font-bold">الرئيسية</span>
                 </button>
-                
                 <button onclick="switchView('view-archive')" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 w-14 transition-colors">
-                    <i class="fa-solid fa-list-check text-[18px]"></i>
-                    <span class="text-[10px] font-bold">السجل</span>
+                    <i class="fa-solid fa-list-check text-[18px]"></i><span class="text-[10px] font-bold">السجل</span>
                 </button>
-                
                 <div class="w-16 flex justify-center relative">
-                    <button onclick="openAddModal()" class="absolute -top-10 w-16 h-16 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full shadow-[0_4px_20px_rgba(16,185,129,0.4)] flex items-center justify-center text-white text-3xl z-40 transition transform hover:scale-105 active:scale-95 border-4 border-slate-50 dark:border-slate-950">
+                    <button id="add-btn-main" onclick="openAddModal()" class="absolute -top-10 w-16 h-16 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full shadow-[0_8px_25px_rgba(16,185,129,0.4)] flex items-center justify-center text-white text-3xl z-40 transition-transform transform hover:scale-105 active:scale-90 border-4 border-slate-50 dark:border-slate-950">
                         <i class="fa-solid fa-plus"></i>
                     </button>
                 </div>
-
                 <button onclick="switchView('view-stats')" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 w-14 transition-colors">
-                    <i class="fa-solid fa-chart-pie text-[18px]"></i>
-                    <span class="text-[10px] font-bold">تحليلات</span>
+                    <i class="fa-solid fa-chart-pie text-[18px]"></i><span class="text-[10px] font-bold">تحليلات</span>
                 </button>
-                
                 <button onclick="switchView('view-settings')" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 w-14 transition-colors">
-                    <i class="fa-solid fa-gear text-[18px]"></i>
-                    <span class="text-[10px] font-bold">إعدادات</span>
+                    <i class="fa-solid fa-gear text-[18px]"></i><span class="text-[10px] font-bold">إعدادات</span>
                 </button>
-
             </div>
         </nav>
 
@@ -273,11 +268,10 @@
                 <div class="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mb-6"></div>
                 <div class="flex justify-between items-center mb-6 px-1">
                     <h2 class="text-xl font-bold text-slate-800 dark:text-white">إضافة منتج مباع</h2>
-                    <button onclick="closeAddModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-2"><i class="fa-solid fa-xmark text-xl"></i></button>
+                    <button onclick="closeAddModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-2 bg-slate-100 dark:bg-slate-800 rounded-full w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 
                 <form id="add-form" class="flex-1 overflow-y-auto no-scrollbar space-y-4 pb-10 px-1" onsubmit="handleFormSubmit(event)">
-                    
                     <div>
                         <label class="text-xs text-slate-500 dark:text-slate-400 mb-1.5 block font-bold">القسم</label>
                         <select id="item-category" required class="glass-input w-full p-3.5 appearance-none bg-white dark:bg-slate-800 font-medium">
@@ -290,34 +284,30 @@
                             <option value="أخرى">أخرى</option>
                         </select>
                     </div>
-
                     <div>
                         <label class="text-xs text-slate-500 dark:text-slate-400 mb-1.5 block font-bold">الموديل / الوصف</label>
-                        <input type="text" id="item-name" required class="glass-input w-full p-3.5 bg-white dark:bg-slate-800" placeholder="مثال: شنطة كروس أسود">
+                        <input type="text" id="item-name" required class="glass-input w-full p-3.5 bg-white dark:bg-slate-800" placeholder="مثال: شنطة كروس أسود" autocomplete="off">
                     </div>
-
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="text-xs text-slate-500 dark:text-slate-400 mb-1.5 block font-bold">سعر القطعة (ج)</label>
-                            <input type="number" id="item-price" required min="1" step="0.5" class="glass-input w-full p-3.5 text-lg font-black bg-white dark:bg-slate-800" placeholder="0.00" oninput="calculateTotal()">
+                            <input type="number" id="item-price" required min="0.5" step="0.5" class="glass-input w-full p-3.5 text-lg font-black bg-white dark:bg-slate-800" placeholder="0.00" oninput="calculateTotal()">
                         </div>
                         <div>
                             <label class="text-xs text-slate-500 dark:text-slate-400 mb-1.5 block font-bold">الكمية</label>
                             <div class="flex items-center glass-input bg-white dark:bg-slate-800 h-[56px] rounded-2xl overflow-hidden">
-                                <button type="button" class="w-12 h-full text-emerald-500 font-bold bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100" onclick="adjustQty(-1)">-</button>
+                                <button type="button" class="w-12 h-full text-emerald-500 font-bold bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 active:bg-slate-200 dark:active:bg-slate-600 transition" onclick="adjustQty(-1)">-</button>
                                 <input type="number" id="item-qty" required min="1" value="1" class="flex-1 w-full h-full text-center font-black outline-none bg-transparent" oninput="calculateTotal()">
-                                <button type="button" class="w-12 h-full text-emerald-500 font-bold bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100" onclick="adjustQty(1)">+</button>
+                                <button type="button" class="w-12 h-full text-emerald-500 font-bold bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 active:bg-slate-200 dark:active:bg-slate-600 transition" onclick="adjustQty(1)">+</button>
                             </div>
                         </div>
                     </div>
-
                     <div class="glass-card p-5 mt-6 border border-emerald-500/20 bg-emerald-50 dark:bg-emerald-900/20 text-center rounded-2xl">
                         <p class="text-xs text-emerald-600 dark:text-emerald-400 font-bold mb-1">الإجمالي المطلوب</p>
                         <h3 class="text-4xl font-black text-slate-800 dark:text-white"><span id="item-total-display">0</span> <span class="text-sm font-bold text-slate-500">ج.م</span></h3>
                     </div>
-
-                    <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-lg py-4 rounded-2xl shadow-lg shadow-emerald-500/30 mt-6 active:scale-95 transition-transform">
-                        حفظ في السجل
+                    <button id="submit-btn" type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-lg py-4 rounded-2xl shadow-[0_8px_20px_rgba(16,185,129,0.3)] mt-6 active:scale-[0.98] transition-transform flex justify-center items-center gap-2">
+                        <span>حفظ في السجل</span> <i class="fa-solid fa-check-circle"></i>
                     </button>
                 </form>
             </div>
@@ -327,373 +317,303 @@
     </div>
 
     <script>
-        // ===============================
-        // GOOGLE APPS SCRIPT API
-        // ===============================
-        const API_URL = "https://script.google.com/macros/s/AKfycbwB-79Coder9XRCvh4OZvmsldCPrMPBzi4dD2QGWlCrmo_U3z5coNcm_yrZ661d6lYD/exec";
-
-        // --- 1. State Management ---
-        const AppState = {
-            transactions: JSON.parse(localStorage.getItem('pos_transactions')) || [],
-            offlineQueue: JSON.parse(localStorage.getItem('pos_queue')) || [],
-            lastActiveDate: localStorage.getItem('pos_last_date') || new Date().toLocaleDateString('en-CA'),
-            username: localStorage.getItem('pos_username') || '',
-            dailyTarget: parseInt(localStorage.getItem('pos_target')) || 1000
-        };
-
+        // ==========================================
+        // 1. CONFIGURATION & CONSTANTS
+        // ==========================================
+        const API_URL = "https://script.google.com/macros/s/AKfycbxlEOFEDvf6to-SLWAeNreu0XzzjgdCjFquogRMEmGn7cuao8pr7WnOc6nTDHNa-CU9/exec";
+        
         const CATEGORY_ICONS = {
             'حجاب': 'fa-vest', 'إكسسوارات': 'fa-gem', 'بندانة': 'fa-ribbon',
             'شنطة': 'fa-bag-shopping', 'محفظة': 'fa-wallet', 'أخرى': 'fa-box-open'
         };
 
-        let myChart = null;
+        // ==========================================
+        // 2. STATE MANAGEMENT & STORAGE
+        // ==========================================
+        const AppState = {
+            transactions: JSON.parse(localStorage.getItem('pos_transactions')) || [],
+            offlineQueue: JSON.parse(localStorage.getItem('pos_queue')) || [],
+            lastActiveDate: localStorage.getItem('pos_last_date') || new Date().toLocaleDateString('en-CA'),
+            username: localStorage.getItem('pos_username') || '',
+            dailyTarget: parseInt(localStorage.getItem('pos_target')) || 1000,
+            isSyncing: false
+        };
 
-        // --- 2. Initialization ---
+        function saveLocalData() {
+            localStorage.setItem('pos_transactions', JSON.stringify(AppState.transactions));
+            localStorage.setItem('pos_queue', JSON.stringify(AppState.offlineQueue));
+        }
+
+        // ==========================================
+        // 3. SECURITY & UTILS
+        // ==========================================
+        function sanitizeInput(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML.trim();
+        }
+
+        function generateUUID() {
+            return 'ZHR-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+        }
+
+        // ==========================================
+        // 4. REAL-TIME SYNC ENGINE (CORE)
+        // ==========================================
+        const SyncEngine = {
+            status: 'offline', // synced, syncing, offline, error
+
+            setIndicator(newStatus) {
+                this.status = newStatus;
+                const el = document.getElementById('sync-status');
+                const ping = document.getElementById('sync-ping');
+                const badge = document.getElementById('offline-badge');
+                
+                el.className = 'relative inline-flex rounded-full h-3 w-3 transition-all duration-300';
+                ping.className = 'absolute inline-flex h-full w-full rounded-full opacity-0 transition-opacity';
+                
+                if (newStatus === 'synced') {
+                    el.classList.add('bg-emerald-500', 'shadow-[0_0_8px_#10b981]');
+                    badge.classList.add('hidden');
+                } else if (newStatus === 'syncing') {
+                    el.classList.add('bg-yellow-400', 'shadow-[0_0_8px_#facc15]');
+                    ping.classList.add('bg-yellow-400', 'animate-ping', 'opacity-75');
+                    badge.classList.add('hidden');
+                } else if (newStatus === 'offline') {
+                    el.classList.add('bg-red-500', 'shadow-[0_0_8px_#ef4444]');
+                    badge.classList.remove('hidden');
+                } else if (newStatus === 'error') {
+                    el.classList.add('bg-orange-500', 'shadow-[0_0_8px_#f97316]');
+                    badge.classList.remove('hidden');
+                }
+            },
+
+            async pushToServer(transaction) {
+                if (!navigator.onLine) {
+                    console.log("Offline Mode");
+                    this.setIndicator('offline');
+                    return false;
+                }
+
+                try {
+                    this.setIndicator('syncing');
+                    const formData = new FormData();
+                    formData.append("data", JSON.stringify(transaction));
+
+                    const response = await fetch(API_URL, { method: "POST", body: formData });
+                    await response.text(); // Parse safely
+                    
+                    transaction.synced = true;
+                    
+                    // Remove from offline queue safely
+                    AppState.offlineQueue = AppState.offlineQueue.filter(t => t.id !== transaction.id);
+                    
+                    // Mark as synced in local main array
+                    const localTx = AppState.transactions.find(t => t.id === transaction.id);
+                    if (localTx) localTx.synced = true;
+
+                    saveLocalData();
+                    console.log("Saved To Google Sheet");
+                    this.setIndicator('synced');
+                    return true;
+                } catch(error) {
+                    console.error(error);
+                    console.log("Sync Error");
+                    this.setIndicator('error');
+                    return false;
+                }
+            },
+
+            async processQueue() {
+                if (!navigator.onLine || AppState.offlineQueue.length === 0 || AppState.isSyncing) return;
+                
+                AppState.isSyncing = true;
+                let successCount = 0;
+                
+                // Copy queue to prevent mutation issues during loop
+                const queueCopy = [...AppState.offlineQueue];
+                
+                for (const tx of queueCopy) {
+                    const success = await this.pushToServer(tx);
+                    if (success) {
+                        console.log("Queue Retry Success");
+                        successCount++;
+                    } else {
+                        break; // Stop processing if one fails to preserve order
+                    }
+                }
+                
+                if (successCount > 0) queueRender();
+                AppState.isSyncing = false;
+            },
+
+            async fetchLatest() {
+                if (!navigator.onLine || AppState.isSyncing) return;
+                
+                console.log("Fetching Latest Transactions");
+                AppState.isSyncing = true;
+                this.setIndicator('syncing');
+
+                try {
+                    const response = await fetch(API_URL);
+                    const serverData = await response.json(); 
+                    let isUpdated = false;
+
+                    // Efficient Merge using Map
+                    const localMap = new Map(AppState.transactions.map(t => [t.id, t]));
+
+                    serverData.forEach(serverTx => {
+                        const localTx = localMap.get(serverTx.id);
+                        if (!localTx) {
+                            // Completely new transaction from another device
+                            AppState.transactions.push(serverTx);
+                            localMap.set(serverTx.id, serverTx);
+                            isUpdated = true;
+                        } else if (!localTx.synced) {
+                            // Already exists but local didn't know it was synced
+                            localTx.synced = true;
+                            isUpdated = true;
+                        }
+                    });
+
+                    if (isUpdated) {
+                        // Sort by Timestamp Descending (Newest First)
+                        AppState.transactions.sort((a, b) => b.timestamp - a.timestamp);
+                        saveLocalData();
+                        queueRender();
+                        console.log("Real-time Sync Complete");
+                    }
+
+                    this.setIndicator('synced');
+                } catch(error) {
+                    console.log("Sync Error");
+                    this.setIndicator('error');
+                } finally {
+                    AppState.isSyncing = false;
+                }
+            }
+        };
+
+        // ==========================================
+        // 5. EVENT LISTENERS (BACKGROUND & NETWORK)
+        // ==========================================
+        window.addEventListener('online', () => {
+            console.log("Network Reconnected");
+            showToast('عاد الاتصال بالإنترنت', 'success');
+            SyncEngine.setIndicator('syncing');
+            SyncEngine.processQueue().then(() => SyncEngine.fetchLatest());
+        });
+        
+        window.addEventListener('offline', () => {
+            console.log("Offline Mode");
+            SyncEngine.setIndicator('offline');
+            showToast('أنت الآن تعمل بدون إنترنت', 'error');
+        });
+
+        // Smart Background Refresh
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                SyncEngine.processQueue().then(() => SyncEngine.fetchLatest());
+            }
+        });
+        
+        window.addEventListener('focus', () => {
+            SyncEngine.processQueue().then(() => SyncEngine.fetchLatest());
+        });
+
+        // 3 Second Polling
+        setInterval(() => {
+            SyncEngine.processQueue().then(() => SyncEngine.fetchLatest());
+        }, 3000);
+
+
+        // ==========================================
+        // 6. INITIALIZATION & UI LOGIC
+        // ==========================================
         function initApp() {
             initTheme();
             checkOnboarding();
             checkMidnightArchive();
             
             if(AppState.username) {
-                document.getElementById('header-user').innerHTML = `مرحباً بك، <span class="font-bold text-slate-700 dark:text-white">${AppState.username}</span>`;
-                document.getElementById('settings-username').textContent = AppState.username;
+                document.getElementById('header-user').innerHTML = `مرحباً بك، <span class="font-bold text-slate-800 dark:text-white">${sanitizeInput(AppState.username)}</span>`;
+                document.getElementById('settings-username').textContent = sanitizeInput(AppState.username);
             }
             document.getElementById('daily-target-input').value = AppState.dailyTarget;
 
-            renderDashboard();
+            if(!navigator.onLine) SyncEngine.setIndicator('offline');
+            
+            queueRender();
             initChart();
-            setupNetworkListeners();
-        }
-
-        // --- Theme & Onboarding ---
-        function initTheme() {
-            const theme = localStorage.getItem('pos_theme') || 'dark';
-            const html = document.documentElement;
-            const icon = document.getElementById('theme-icon');
             
-            if (theme === 'dark') {
-                html.classList.add('dark');
-                icon.className = 'fa-solid fa-sun text-yellow-400';
-            } else {
-                html.classList.remove('dark');
-                icon.className = 'fa-solid fa-moon text-slate-600';
-            }
+            // Initial Fetch
+            SyncEngine.processQueue().then(() => SyncEngine.fetchLatest());
         }
 
-        function toggleTheme() {
-            const html = document.documentElement;
-            const isDark = html.classList.toggle('dark');
-            localStorage.setItem('pos_theme', isDark ? 'dark' : 'light');
-            initTheme();
-            if(myChart) updateChart();
+        // DEBOUNCED RENDERER
+        let renderTimer;
+        function queueRender() {
+            clearTimeout(renderTimer);
+            renderTimer = setTimeout(() => {
+                if(document.getElementById('view-dashboard').classList.contains('active')) renderDashboard();
+                if(document.getElementById('view-archive').classList.contains('active')) renderArchive();
+                if(document.getElementById('view-stats').classList.contains('active')) updateChart();
+            }, 100);
         }
 
-        function checkOnboarding() {
-            if (!AppState.username) {
-                document.getElementById('onboarding-modal').classList.add('active');
-            }
-        }
-
-        function saveUsername() {
-            const name = document.getElementById('username-input').value.trim();
-            if (name) {
-                AppState.username = name;
-                localStorage.setItem('pos_username', name);
-                document.getElementById('onboarding-modal').classList.remove('active');
-                initApp(); 
-                showToast(`أهلاً بك يا ${name} في زهرة الإيمان 🌸`, 'success');
-            } else {
-                showToast('يرجى إدخال اسم صحيح', 'error');
-            }
-        }
-
-        function editUsername() {
-            const newName = prompt("أدخل اسم الكاشير الجديد:", AppState.username);
-            if(newName && newName.trim()) {
-                AppState.username = newName.trim();
-                localStorage.setItem('pos_username', AppState.username);
-                initApp();
-            }
-        }
-
-        function saveTarget(val) {
-            AppState.dailyTarget = parseInt(val) || 1000;
-            localStorage.setItem('pos_target', AppState.dailyTarget);
-            renderDashboard();
-            showToast('تم تحديث الهدف اليومي', 'success');
-        }
-
-        function checkMidnightArchive() {
-            const today = new Date().toLocaleDateString('en-CA');
-            if (AppState.lastActiveDate !== today) {
-                AppState.lastActiveDate = today;
-                localStorage.setItem('pos_last_date', today);
-                showToast('بدأ يوم عمل جديد! 🌅', 'success');
-            }
-        }
-
-        // --- 3. UI Navigation & Interaction ---
-        function switchView(viewId) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
-            
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('text-emerald-500', 'active');
-                btn.classList.add('text-slate-400');
-            });
-            event.currentTarget.classList.remove('text-slate-400');
-            event.currentTarget.classList.add('text-emerald-500', 'active');
-
-            if(viewId === 'view-archive') renderArchive();
-            if(viewId === 'view-stats') updateChart();
-        }
-
-        function openAddModal() {
-            document.getElementById('add-modal').classList.add('active');
-            setTimeout(() => document.getElementById('item-name').focus(), 100);
-        }
-
-        function closeAddModal() {
-            document.getElementById('add-modal').classList.remove('active');
-            document.getElementById('add-form').reset();
-            document.getElementById('item-total-display').textContent = '0';
-        }
-
-        function adjustQty(amount) {
-            const input = document.getElementById('item-qty');
-            let val = parseInt(input.value) + amount;
-            if (val < 1) val = 1;
-            input.value = val;
-            calculateTotal();
-        }
-
-        function calculateTotal() {
-            const price = parseFloat(document.getElementById('item-price').value) || 0;
-            const qty = parseInt(document.getElementById('item-qty').value) || 1;
-            document.getElementById('item-total-display').textContent = (price * qty).toFixed(2);
-        }
-
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            const icon = type === 'success' ? '<i class="fa-solid fa-circle-check text-emerald-500 text-lg"></i>' : 
-                         type === 'error' ? '<i class="fa-solid fa-circle-exclamation text-red-500 text-lg"></i>' :
-                         '<i class="fa-solid fa-bell text-blue-500 text-lg"></i>';
-            toast.innerHTML = `${icon} <span class="text-sm">${message}</span>`;
-            
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(-20px)';
-                toast.style.transition = 'all 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        // --- 4. Core Business Logic ---
+        // --- FORM SUBMISSION ---
         async function handleFormSubmit(e) {
             e.preventDefault();
+            
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true; // Prevent Double Clicks
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
 
             const category = document.getElementById('item-category').value;
-            const name = document.getElementById('item-name').value;
+            const name = sanitizeInput(document.getElementById('item-name').value);
             const price = parseFloat(document.getElementById('item-price').value);
             const qty = parseInt(document.getElementById('item-qty').value);
+            
+            if(!name || price <= 0 || qty <= 0) {
+                showToast('بيانات غير صحيحة', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<span>حفظ في السجل</span> <i class="fa-solid fa-check-circle"></i>';
+                return;
+            }
+
             const total = price * qty;
             const now = new Date();
 
             const transaction = {
-                id: 'ZHR-' + Math.random().toString(36).substr(2, 6).toUpperCase(),
-                category,
-                name,
-                price,
-                qty,
-                total,
+                id: generateUUID(),
+                category, name, price, qty, total,
                 date: now.toLocaleDateString('en-CA'),
                 time: now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
                 timestamp: now.getTime(),
                 synced: false
             };
 
-            // Save locally first
+            // Save Locally
             AppState.transactions.unshift(transaction);
-            AppState.offlineQueue.push(transaction); // Add to queue in case sync fails
-
-            localStorage.setItem('pos_transactions', JSON.stringify(AppState.transactions));
-            localStorage.setItem('pos_queue', JSON.stringify(AppState.offlineQueue));
-
-            renderDashboard();
+            AppState.offlineQueue.push(transaction);
+            saveLocalData();
+            
+            console.log("Offline Queue Saved");
+            queueRender();
             closeAddModal();
-            showToast('تم حفظ العملية', 'success');
+            showToast('تم تسجيل العملية بنجاح', 'success');
 
-            // Send to server
-            await sendToServer(transaction);
+            // Reset Button
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<span>حفظ في السجل</span> <i class="fa-solid fa-check-circle"></i>';
+            }, 500);
+
+            // Push Background
+            SyncEngine.pushToServer(transaction);
         }
 
-        // ===============================
-        // NETWORK SYNC LOGIC
-        // ===============================
-
-        function setSyncStatusIndicator(status) {
-            const el = document.getElementById('sync-status');
-            el.classList.remove('bg-emerald-500', 'bg-red-500', 'bg-yellow-400', 'shadow-[0_0_8px_#10b981]', 'shadow-[0_0_8px_#ef4444]', 'shadow-[0_0_8px_#facc15]');
-            
-            if (status === 'synced') {
-                el.classList.add('bg-emerald-500', 'shadow-[0_0_8px_#10b981]');
-            } else if (status === 'error' || status === 'offline') {
-                el.classList.add('bg-red-500', 'shadow-[0_0_8px_#ef4444]');
-            } else if (status === 'syncing') {
-                el.classList.add('bg-yellow-400', 'shadow-[0_0_8px_#facc15]');
-            }
-        }
-
-        async function sendToServer(transaction) {
-            if (!navigator.onLine) {
-                console.log("Offline Mode");
-                setSyncStatusIndicator('offline');
-                return;
-            }
-
-            try {
-                setSyncStatusIndicator('syncing');
-
-                // VERY IMPORTANT: Use FormData with a "data" field containing serialized JSON
-                const formData = new FormData();
-                formData.append("data", JSON.stringify(transaction));
-
-                const response = await fetch(API_URL, {
-                    method: "POST",
-                    body: formData
-                });
-
-                // Parse using response.text() then JSON.parse()
-                const text = await response.text();
-                
-                try {
-                    const result = JSON.parse(text); 
-                    console.log("Server Response:", result);
-                } catch(e) {
-                    console.log("Non-JSON Server Response:", text);
-                }
-
-                // Success
-                transaction.synced = true;
-                
-                // Remove from offline queue
-                AppState.offlineQueue = AppState.offlineQueue.filter(t => t.id !== transaction.id);
-                localStorage.setItem('pos_queue', JSON.stringify(AppState.offlineQueue));
-                
-                // Update local transactions array to mark as synced
-                const localIndex = AppState.transactions.findIndex(t => t.id === transaction.id);
-                if (localIndex !== -1) {
-                    AppState.transactions[localIndex].synced = true;
-                    localStorage.setItem('pos_transactions', JSON.stringify(AppState.transactions));
-                }
-
-                setSyncStatusIndicator('synced');
-                console.log("Saved To Google Sheet");
-
-            } catch(error) {
-                console.log("Sync Error");
-                console.error(error);
-                setSyncStatusIndicator('error');
-            }
-        }
-
-        // Realtime Polling & Queue Processing
-        async function fetchLatestTransactions() {
-            if (!navigator.onLine) {
-                console.log("Offline Mode");
-                setSyncStatusIndicator('offline');
-                return;
-            }
-
-            // 1. Send unsynced queued items first
-            if (AppState.offlineQueue.length > 0) {
-                for (let i = 0; i < AppState.offlineQueue.length; i++) {
-                    await sendToServer(AppState.offlineQueue[i]);
-                }
-            }
-
-            // 2. Fetch latest data from server
-            try {
-                setSyncStatusIndicator('syncing');
-                const response = await fetch(API_URL);
-                const serverData = await response.json(); 
-
-                let isUpdated = false;
-
-                // Compare and append missing records
-                serverData.forEach(serverTx => {
-                    const existsLocally = AppState.transactions.find(localTx => localTx.id === serverTx.id);
-                    if (!existsLocally) {
-                        AppState.transactions.push(serverTx);
-                        isUpdated = true;
-                    }
-                });
-
-                if (isUpdated) {
-                    // Sort descending by timestamp
-                    AppState.transactions.sort((a, b) => b.timestamp - a.timestamp);
-                    localStorage.setItem('pos_transactions', JSON.stringify(AppState.transactions));
-                    
-                    renderDashboard();
-                    if(document.getElementById('view-archive').classList.contains('active')) renderArchive();
-                    if(document.getElementById('view-stats').classList.contains('active')) updateChart();
-                    
-                    showToast('تم تحديث البيانات لحظياً', 'success');
-                }
-
-                setSyncStatusIndicator('synced');
-
-            } catch(error) {
-                console.log("Sync Error");
-                setSyncStatusIndicator('error');
-            }
-        }
-
-        // Poll backend every 5 seconds for Real-Time Sync
-        setInterval(fetchLatestTransactions, 5000);
-
-        // --- 5. Export to Text Invoice ---
-        async function copyInvoice() {
-            const today = new Date().toLocaleDateString('en-CA');
-            const todayTransactions = AppState.transactions.filter(t => t.date === today);
-            
-            if(todayTransactions.length === 0) {
-                showToast('لا توجد مبيعات اليوم لنسخها', 'error'); return;
-            }
-            
-            let total = 0;
-            let text = `🌸 فاتورة زهرة الإيمان 🌸\n`;
-            text += `الكاشير: ${AppState.username}\n`;
-            text += `التاريخ: ${new Date().toLocaleDateString('ar-EG')}\n`;
-            text += `------------------------\n`;
-            
-            todayTransactions.forEach((t, i) => {
-                text += `${i+1}. ${t.name} | ${t.qty}x \n   بـ ${t.total} ج.م\n`;
-                total += t.total;
-            });
-            
-            text += `------------------------\n`;
-            text += `الإجمالي: ${total} ج.م\n`;
-            text += `شكراً لزيارتكم!`;
-            
-            try {
-                await navigator.clipboard.writeText(text);
-                showToast('تم نسخ الفاتورة النصية بنجاح!', 'success');
-            } catch(e) {
-                const textArea = document.createElement("textarea");
-                textArea.value = text;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand("copy");
-                textArea.remove();
-                showToast('تم نسخ الفاتورة النصية بنجاح!', 'success');
-            }
-        }
-
-        // --- 6. Rendering ---
+        // --- RENDER FUNCTIONS ---
         function renderDashboard() {
             const today = new Date().toLocaleDateString('en-CA');
             const todayTransactions = AppState.transactions.filter(t => t.date === today);
@@ -707,8 +627,7 @@
             let percent = Math.min(100, Math.round((totalSales / AppState.dailyTarget) * 100));
             document.getElementById('target-bar').style.width = `${percent}%`;
             document.getElementById('target-percent').textContent = `${percent}%`;
-            if(percent >= 100) document.getElementById('target-bar').classList.add('bg-yellow-400');
-            else document.getElementById('target-bar').classList.remove('bg-yellow-400');
+            document.getElementById('target-bar').className = `h-full rounded-full transition-all duration-1000 ${percent >= 100 ? 'bg-yellow-400' : 'bg-emerald-500'}`;
 
             const listEl = document.getElementById('recent-transactions-list');
             listEl.innerHTML = '';
@@ -726,29 +645,31 @@
             listEl.innerHTML = '';
             
             let filtered = AppState.transactions;
-            if (filterText) {
-                filtered = filtered.filter(t => t.name.includes(filterText) || t.category.includes(filterText));
+            const term = filterText.toLowerCase();
+            if (term) {
+                filtered = filtered.filter(t => t.name.toLowerCase().includes(term) || t.category.includes(term));
             }
 
             const grouped = filtered.reduce((acc, obj) => {
-                const key = obj.date;
-                if (!acc[key]) acc[key] = [];
-                acc[key].push(obj);
+                if (!acc[obj.date]) acc[obj.date] = [];
+                acc[obj.date].push(obj);
                 return acc;
             }, {});
 
             if(Object.keys(grouped).length === 0) {
-                listEl.innerHTML = `<div class="text-center py-10 text-slate-400 font-medium">لا توجد سجلات.</div>`;
+                listEl.innerHTML = `<div class="text-center py-10 text-slate-400 font-medium">لا توجد سجلات مطابقة.</div>`;
                 return;
             }
 
             for (const date in grouped) {
                 const dayTotal = grouped[date].reduce((sum, t) => sum + t.total, 0);
+                const displayDate = date === new Date().toLocaleDateString('en-CA') ? 'مبيعات اليوم' : new Date(date).toLocaleDateString('ar-EG', { weekday:'long', year:'numeric', month:'short', day:'numeric' });
+                
                 let html = `
-                <div class="mb-5">
-                    <div class="flex justify-between items-center mb-3 px-2 border-b border-slate-200 dark:border-slate-700 pb-2">
-                        <span class="font-bold text-slate-600 dark:text-slate-300 text-sm"><i class="fa-regular fa-calendar ml-2 text-emerald-500"></i>${date === new Date().toLocaleDateString('en-CA') ? 'مبيعات اليوم' : date}</span>
-                        <span class="font-black text-slate-800 dark:text-white">${dayTotal} ج</span>
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3 px-1 border-b border-slate-200 dark:border-slate-700 pb-2">
+                        <span class="font-bold text-slate-600 dark:text-slate-300 text-sm"><i class="fa-regular fa-calendar ml-2 text-emerald-500"></i>${displayDate}</span>
+                        <span class="font-black text-slate-800 dark:text-white bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">${dayTotal} ج</span>
                     </div>
                     <div class="space-y-2">
                 `;
@@ -760,52 +681,206 @@
 
         function createTransactionCard(t) {
             const icon = CATEGORY_ICONS[t.category] || CATEGORY_ICONS['أخرى'];
+            const syncIcon = t.synced ? '<i class="fa-solid fa-cloud-check text-emerald-500" title="متزامن"></i>' : '<i class="fa-solid fa-cloud-arrow-up text-slate-400" title="في قائمة الانتظار"></i>';
+            
             return `
-            <div class="glass-card p-3 flex justify-between items-center bg-white dark:bg-slate-800 hover:scale-[1.02] transition-transform shadow-sm">
+            <div class="glass-card p-3 flex justify-between items-center hover:scale-[1.01] transition-transform shadow-sm">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 text-emerald-500 flex items-center justify-center text-lg">
+                    <div class="w-11 h-11 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-emerald-500 flex items-center justify-center text-lg border border-slate-200 dark:border-slate-700">
                         <i class="fa-solid ${icon}"></i>
                     </div>
                     <div>
-                        <h4 class="font-bold text-sm text-slate-800 dark:text-white">${t.name}</h4>
-                        <div class="flex text-[10px] text-slate-500 gap-2 mt-1 font-medium">
+                        <h4 class="font-bold text-sm text-slate-800 dark:text-white truncate max-w-[140px]">${sanitizeInput(t.name)}</h4>
+                        <div class="flex items-center text-[10px] text-slate-500 gap-2 mt-1 font-medium">
                             <span>${t.category}</span>
-                            <span>•</span>
+                            <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
                             <span>${t.time}</span>
-                            ${t.synced ? '<span class="text-emerald-500"><i class="fa-solid fa-cloud-check"></i></span>' : ''}
+                            <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                            ${syncIcon}
                         </div>
                     </div>
                 </div>
-                <div class="text-left">
-                    <p class="font-black text-emerald-600 dark:text-emerald-400">${t.total} <span class="text-[10px] font-normal">ج</span></p>
-                    <p class="text-[10px] text-slate-400">${t.qty}x ${t.price}</p>
+                <div class="text-left flex flex-col items-end">
+                    <p class="font-black text-emerald-600 dark:text-emerald-400 text-base">${t.total} <span class="text-[10px] font-normal">ج</span></p>
+                    <p class="text-[10px] text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 rounded">${t.qty}x ${t.price}</p>
                 </div>
             </div>`;
         }
 
-        function filterArchive() { renderArchive(document.getElementById('search-input').value); }
+        // --- HELPERS & MINOR FEATURES ---
+        function forceSync() {
+            if(!navigator.onLine) { showToast('لا يوجد اتصال بالإنترنت', 'error'); return; }
+            showToast('جاري المزامنة مع السحابة...', 'info');
+            SyncEngine.processQueue().then(() => SyncEngine.fetchLatest());
+        }
 
-        // --- 7. Charts ---
+        function checkOnboarding() { if (!AppState.username) document.getElementById('onboarding-modal').classList.add('active'); }
+        
+        function saveUsername() {
+            const name = document.getElementById('username-input').value.trim();
+            if (name) {
+                AppState.username = name;
+                localStorage.setItem('pos_username', name);
+                document.getElementById('onboarding-modal').classList.remove('active');
+                initApp(); 
+                showToast(`أهلاً بك يا ${name} 🌸`, 'success');
+            } else showToast('يرجى إدخال اسم صحيح', 'error');
+        }
+
+        function editUsername() {
+            const newName = prompt("أدخل اسم الكاشير الجديد:", AppState.username);
+            if(newName && newName.trim()) {
+                AppState.username = newName.trim();
+                localStorage.setItem('pos_username', AppState.username);
+                initApp();
+            }
+        }
+
+        function saveTarget(val) {
+            AppState.dailyTarget = parseInt(val) || 1000;
+            localStorage.setItem('pos_target', AppState.dailyTarget);
+            queueRender();
+            showToast('تم تحديث الهدف اليومي', 'success');
+        }
+
+        function checkMidnightArchive() {
+            const today = new Date().toLocaleDateString('en-CA');
+            if (AppState.lastActiveDate !== today) {
+                AppState.lastActiveDate = today;
+                localStorage.setItem('pos_last_date', today);
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('pos_theme', isDark ? 'dark' : 'light');
+            initTheme();
+            if(myChart) updateChart();
+        }
+
+        function initTheme() {
+            const theme = localStorage.getItem('pos_theme') || 'dark';
+            const icon = document.getElementById('theme-icon');
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                icon.className = 'fa-solid fa-sun text-yellow-400';
+            } else {
+                document.documentElement.classList.remove('dark');
+                icon.className = 'fa-solid fa-moon text-slate-600';
+            }
+        }
+
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-emerald-500', 'active');
+                btn.classList.add('text-slate-400');
+            });
+            event.currentTarget.classList.remove('text-slate-400');
+            event.currentTarget.classList.add('text-emerald-500', 'active');
+            queueRender();
+        }
+
+        function openAddModal() {
+            document.getElementById('add-modal').classList.add('active');
+            setTimeout(() => document.getElementById('item-name').focus(), 300);
+        }
+
+        function closeAddModal() {
+            document.getElementById('add-modal').classList.remove('active');
+            document.getElementById('add-form').reset();
+            document.getElementById('item-total-display').textContent = '0';
+        }
+
+        function adjustQty(amount) {
+            const input = document.getElementById('item-qty');
+            let val = parseInt(input.value) + amount;
+            input.value = Math.max(1, val);
+            calculateTotal();
+        }
+
+        function calculateTotal() {
+            const price = parseFloat(document.getElementById('item-price').value) || 0;
+            const qty = parseInt(document.getElementById('item-qty').value) || 1;
+            document.getElementById('item-total-display').textContent = (price * qty).toFixed(2);
+        }
+
+        function filterArchive() { queueRender(); }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            const icon = type === 'success' ? '<i class="fa-solid fa-circle-check text-emerald-500 text-xl"></i>' : 
+                         type === 'error' ? '<i class="fa-solid fa-circle-exclamation text-red-500 text-xl"></i>' :
+                         '<i class="fa-solid fa-bell text-blue-500 text-xl"></i>';
+            toast.innerHTML = `${icon} <span class="text-sm">${sanitizeInput(message)}</span>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px) scale(0.95)';
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
+        function animateValue(id, start, end, duration) {
+            let obj = document.getElementById(id);
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const val = Math.floor(progress * (end - start) + start);
+                obj.innerHTML = `${val} <span class="text-xl text-slate-400">ج.م</span>`;
+                if (progress < 1) window.requestAnimationFrame(step);
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        function clearData() {
+            if(confirm('تنبيه: سيؤدي هذا لمسح الكاش الآلي بالكامل من جهازك ولن تستطيع استعادة البيانات غير المتزامنة. هل أنت متأكد؟')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        async function copyInvoice() {
+            const today = new Date().toLocaleDateString('en-CA');
+            const todayTransactions = AppState.transactions.filter(t => t.date === today);
+            if(todayTransactions.length === 0) { showToast('لا توجد مبيعات لنسخها', 'error'); return; }
+            
+            let total = 0, text = `🌸 فاتورة زهرة الإيمان 🌸\nالكاشير: ${AppState.username}\nالتاريخ: ${new Date().toLocaleDateString('ar-EG')}\n------------------------\n`;
+            todayTransactions.forEach((t, i) => {
+                text += `${i+1}. ${t.name} | ${t.qty}x \n   بـ ${t.total} ج.م\n`;
+                total += t.total;
+            });
+            text += `------------------------\nالإجمالي: ${total} ج.م\nشكراً لزيارتكم!`;
+            
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast('تم نسخ الفاتورة النصية!', 'success');
+            } catch(e) {
+                const ta = document.createElement("textarea"); ta.value = text;
+                document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove();
+                showToast('تم نسخ الفاتورة النصية!', 'success');
+            }
+        }
+
+        // --- CHARTS LOGIC ---
         function initChart() {
             const ctx = document.getElementById('salesChart').getContext('2d');
+            Chart.defaults.color = document.documentElement.classList.contains('dark') ? '#94a3b8' : '#64748b';
+            Chart.defaults.font.family = 'Tajawal';
+            
             myChart = new Chart(ctx, {
                 type: 'bar',
-                data: {
-                    labels: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
-                    datasets: [{
-                        label: 'المبيعات',
-                        data: [0,0,0,0,0,0,0],
-                        backgroundColor: '#10b981',
-                        borderRadius: 6
-                    }]
-                },
+                data: { labels: [], datasets: [{ label: 'المبيعات', data: [], backgroundColor: '#10b981', borderRadius: 6 }] },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-                    scales: {
-                        x: { grid: { display: false }, ticks: { font: {family:'Tajawal'} } },
-                        y: { border: {dash: [4, 4]} }
-                    }
+                    scales: { x: { grid: { display: false } }, y: { border: {dash: [4, 4]}, grid: {color: 'rgba(150, 150, 150, 0.1)'} } }
                 }
             });
         }
@@ -820,12 +895,12 @@
             const listEl = document.getElementById('best-categories');
             listEl.innerHTML = '';
             
-            const sorted = Object.keys(catStats).sort((a,b) => catStats[b].total - catStats[a].total);
-            if(sorted.length === 0) listEl.innerHTML = '<p class="text-sm text-slate-400">لا توجد بيانات للتحليل.</p>';
+            const sortedCats = Object.keys(catStats).sort((a,b) => catStats[b].total - catStats[a].total);
+            if(sortedCats.length === 0) { listEl.innerHTML = '<p class="text-sm text-slate-400">لا توجد بيانات.</p>'; }
 
-            const maxVal = sorted.length > 0 ? catStats[sorted[0]].total : 1;
+            const maxVal = sortedCats.length > 0 ? catStats[sortedCats[0]].total : 1;
 
-            sorted.forEach(cat => {
+            sortedCats.forEach(cat => {
                 const s = catStats[cat];
                 const width = (s.total / maxVal) * 100;
                 listEl.innerHTML += `
@@ -835,59 +910,41 @@
                             <span class="font-bold text-emerald-600 dark:text-emerald-400">${s.total} ج</span>
                         </div>
                         <div class="w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full" style="width: ${width}%"></div>
+                            <div class="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-1000" style="width: ${width}%"></div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
-        }
 
-        // --- 8. Sync & Helper ---
-        function setupNetworkListeners() {
-            window.addEventListener('online', () => {
-                setSyncStatusIndicator('synced');
-                showToast('عاد الإنترنت، تمت المزامنة السحابية', 'success');
-                fetchLatestTransactions(); // Force sync when coming back online
-            });
-            window.addEventListener('offline', () => {
-                setSyncStatusIndicator('offline');
-                showToast('أنت الآن تعمل بدون إنترنت (Offline)', 'error');
-            });
-            if(!navigator.onLine) setSyncStatusIndicator('offline');
-        }
-
-        function forceSync() {
-            if(!navigator.onLine) { showToast('لا يوجد اتصال بالإنترنت', 'error'); return; }
-            fetchLatestTransactions();
-            showToast('جاري المزامنة...', 'info');
-        }
-
-        function animateValue(id, start, end, duration) {
-            let obj = document.getElementById(id);
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                obj.innerHTML = Math.floor(progress * (end - start) + start) + ' <span class="text-xl text-slate-400">ج.م</span>';
-                if (progress < 1) window.requestAnimationFrame(step);
-            };
-            window.requestAnimationFrame(step);
-        }
-
-        function clearData() {
-            if(confirm('هل أنت متأكد من مسح جميع السجلات بشكل نهائي؟ لا يمكن التراجع عن هذا الإجراء.')) {
-                localStorage.clear();
-                location.reload();
+            // Update Chart Data (Last 7 Days)
+            if(myChart) {
+                const days = []; const totals = [];
+                for(let i=6; i>=0; i--) {
+                    const d = new Date(); d.setDate(d.getDate() - i);
+                    const dateStr = d.toLocaleDateString('en-CA');
+                    days.push(d.toLocaleDateString('ar-EG', {weekday:'short'}));
+                    totals.push(AppState.transactions.filter(t => t.date === dateStr).reduce((sum, t) => sum + t.total, 0));
+                }
+                myChart.data.labels = days;
+                myChart.data.datasets[0].data = totals;
+                Chart.defaults.color = document.documentElement.classList.contains('dark') ? '#94a3b8' : '#64748b';
+                myChart.update();
             }
         }
 
+        // START APP
         window.onload = initApp;
 
-        // PWA SW
+        // Basic PWA Service Worker for Offline Fallback & Installability
         if ('serviceWorker' in navigator) {
-            const swCode = `self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(()=>new Response('Offline'))));`;
+            const swCode = `
+                self.addEventListener('install', e => self.skipWaiting());
+                self.addEventListener('activate', e => self.clients.claim());
+                self.addEventListener('fetch', e => {
+                    e.respondWith(fetch(e.request).catch(() => new Response('Offline', {status: 503, statusText: 'Offline'})));
+                });
+            `;
             const blob = new Blob([swCode], { type: 'application/javascript' });
-            navigator.serviceWorker.register(URL.createObjectURL(blob));
+            navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>console.log("SW Reg Error"));
         }
     </script>
 </body>
