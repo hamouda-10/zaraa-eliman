@@ -229,9 +229,9 @@
                         <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-500 flex items-center justify-center"><i class="fa-solid fa-copy"></i></div>
                         <span class="text-xs font-bold">نسخ فواتير اليوم</span>
                     </button>
-                    <button onclick="exportSales()" class="glass-card flex items-center justify-center p-3.5 gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 shadow-sm text-slate-700 dark:text-slate-200">
-                        <div class="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-500 flex items-center justify-center"><i class="fa-solid fa-file-export"></i></div>
-                        <span class="text-xs font-bold">تصدير نصي</span>
+                    <button onclick="openMonthCopyModal()" class="glass-card flex items-center justify-center p-3.5 gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 shadow-sm text-slate-700 dark:text-slate-200">
+                        <div class="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-500 flex items-center justify-center"><i class="fa-solid fa-calendar-days"></i></div>
+                        <span class="text-xs font-bold">فاتورة الشهر</span>
                     </button>
                 </div>
 
@@ -443,6 +443,32 @@
                         <span>حفظ التعديلات</span> <i class="fa-solid fa-floppy-disk"></i>
                     </button>
                 </form>
+            </div>
+        </div>
+
+        <!-- Copy Month Modal -->
+        <div id="month-modal" class="modal-overlay">
+            <div class="bottom-modal-content flex flex-col bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 shadow-2xl pb-safe-nav">
+                <div class="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mb-6"></div>
+                <div class="flex justify-between items-center mb-6 px-1">
+                    <h2 class="text-xl font-black text-slate-800 dark:text-white">نسخ فاتورة الشهر</h2>
+                    <button type="button" onclick="closeModals()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-2 bg-slate-200/50 dark:bg-slate-800 rounded-full w-9 h-9 flex items-center justify-center transition active:scale-90"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                
+                <div class="flex-1 space-y-4 px-1 pb-4">
+                    <div>
+                        <label class="text-xs text-slate-500 dark:text-slate-400 mb-1.5 block font-bold">اختر الشهر (السنة-الشهر)</label>
+                        <input type="month" id="month-selector" class="glass-input w-full p-3.5 bg-white dark:bg-slate-800 font-bold" lang="en">
+                    </div>
+                    
+                    <div class="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 p-3 rounded-xl text-xs font-medium border border-blue-100 dark:border-blue-800/50 leading-relaxed">
+                        <i class="fa-solid fa-circle-info ml-1"></i> سيتم تجميع المنتجات المتشابهة لتكون الفاتورة منظمة ومختصرة وسهلة القراءة.
+                    </div>
+                    
+                    <button onclick="copyMonthInvoice()" class="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-black text-lg py-4 rounded-2xl shadow-[0_8px_20px_rgba(168,85,247,0.3)] mt-2 active:scale-[0.98] transition-transform flex justify-center items-center gap-2">
+                        <span>نسخ الفاتورة المجمعة</span> <i class="fa-solid fa-copy"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -940,6 +966,16 @@
             deleteTargetId = id;
             document.getElementById('delete-modal').classList.add('active');
         };
+        
+        window.openMonthCopyModal = function() {
+            // Set default value to current month
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            document.getElementById('month-selector').value = `${yyyy}-${mm}`;
+            
+            document.getElementById('month-modal').classList.add('active');
+        };
 
         window.closeModals = function() {
             document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
@@ -1056,27 +1092,54 @@
             catch(e) { const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); window.showToast('تم النسخ!', 'success'); }
         };
 
-        window.exportSales = function() {
-            const today = new Date().toLocaleDateString('en-CA');
-            const txs = window.AppState.transactions.filter(t => t.date === today);
-            if(txs.length === 0) return window.showToast('لا توجد بيانات للتصدير', 'error');
-            
-            let text = `تقرير مبيعات اليوم (${new Date().toLocaleDateString('ar-EG')})\nالكاشير: ${window.AppState.username}\n\n`;
+        window.copyMonthInvoice = async function() {
+            const monthVal = document.getElementById('month-selector').value; // Format: YYYY-MM
+            if(!monthVal) return window.showToast('يرجى اختيار الشهر', 'error');
+
+            const txs = window.AppState.transactions.filter(t => t.date.startsWith(monthVal));
+            if(txs.length === 0) return window.showToast('لا توجد مبيعات في هذا الشهر', 'error');
+
+            // Format for display (MM/YYYY)
+            const [year, month] = monthVal.split('-');
+            const displayMonth = `${month}/${year}`;
+
             let total = 0;
+            let text = `🌸 فاتورة شهر ${displayMonth} 🌸\nالكاشير: ${window.AppState.username}\n------------------------\n`;
+            
+            // Aggregate similar items to keep invoice clean
+            const aggregated = {};
             txs.forEach(t => {
-                text += `- ${t.name} (${t.category})\n  الكمية: ${t.qty} | السعر: ${t.price} | الإجمالي: ${t.total} ج.م | الوقت: ${t.time}\n\n`;
+                const key = `${t.name} (${t.category})`;
+                if(!aggregated[key]) aggregated[key] = { qty: 0, total: 0 };
+                aggregated[key].qty += t.qty;
+                aggregated[key].total += t.total;
                 total += t.total;
             });
-            text += `\nإجمالي الدخل: ${total} ج.م\nإجمالي القطع: ${txs.reduce((sum,t) => sum+t.qty, 0)}`;
+
+            let i = 1;
+            for(const [name, data] of Object.entries(aggregated)) {
+                text += `${i}. ${name} | ${data.qty} قطعة \n   بـ ${data.total} ج.م\n`;
+                i++;
+            }
             
-            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `تقرير_المبيعات_${today}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
-            window.showToast('تم تصدير التقرير', 'success');
+            const totalItems = txs.reduce((sum,t) => sum+t.qty, 0);
+            text += `------------------------\nإجمالي الشهر: ${total} ج.م\nإجمالي القطع: ${totalItems} قطعة\nشكراً لثقتكم!`;
+            
+            try { 
+                await navigator.clipboard.writeText(text); 
+                window.showToast('تم نسخ فاتورة الشهر بنجاح!', 'success'); 
+                window.closeModals();
+            } 
+            catch(e) { 
+                const ta = document.createElement("textarea"); 
+                ta.value = text; 
+                document.body.appendChild(ta); 
+                ta.select(); 
+                document.execCommand("copy"); 
+                ta.remove(); 
+                window.showToast('تم نسخ فاتورة الشهر بنجاح!', 'success'); 
+                window.closeModals();
+            }
         };
 
         // Scroll Logic
