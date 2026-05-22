@@ -35,10 +35,9 @@
             overflow: hidden;
             -webkit-tap-highlight-color: transparent;
             transition: background-color 0.3s ease, color 0.3s ease;
-            touch-action: manipulation; /* Prevent iOS double-tap zoom */
+            touch-action: manipulation;
         }
 
-        /* Enhanced Glassmorphism */
         .glass-card {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(20px);
@@ -68,7 +67,6 @@
         }
         .glass-input:focus { border-color: #10b981; outline: none; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
 
-        /* Smooth View Transitions */
         .view-section { display: none; opacity: 0; transform: translateY(10px); transition: opacity 0.4s ease, transform 0.4s ease; }
         .view-section.active { display: block; opacity: 1; transform: translateY(0); animation: fadeIn 0.4s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -87,24 +85,17 @@
         }
         .modal-overlay.active .bottom-modal-content { bottom: 0; }
 
-        /* Scrollbars */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Toasts */
         #toast-container { position: fixed; top: env(safe-area-inset-top, 1rem); left: 50%; transform: translateX(-50%); z-index: 100; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
         .toast { pointer-events: auto; padding: 14px 20px; border-radius: 14px; display: flex; align-items: center; gap: 12px; animation: fadeInDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .dark .toast { background: rgba(15,23,42,0.95); border: 1px solid rgba(255,255,255,0.1); color: white; }
         html:not(.dark) .toast { background: white; border: 1px solid rgba(0,0,0,0.1); color: #1e293b; }
         @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-        /* Background Graphics */
         .bg-orb-1 { position: absolute; top: -10%; right: -10%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(16,185,129,0.2) 0%, rgba(0,0,0,0) 70%); border-radius: 50%; filter: blur(50px); z-index: -1; pointer-events: none; }
         .bg-orb-2 { position: absolute; bottom: 0; left: -10%; width: 350px; height: 350px; background: radial-gradient(circle, rgba(6,182,212,0.15) 0%, rgba(0,0,0,0) 70%); border-radius: 50%; filter: blur(50px); z-index: -1; pointer-events: none; }
-
-        /* Sync Pulse Indicator */
-        .sync-pulse { animation: pulseWarning 1.5s infinite cubic-bezier(0.4, 0, 0.6, 1); }
-        @keyframes pulseWarning { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(1.2); } }
     </style>
 </head>
 <body class="h-screen w-full flex justify-center bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100">
@@ -227,14 +218,9 @@
                         <div class="flex items-center gap-3"><i class="fa-solid fa-bullseye text-teal-500 w-5"></i><span class="font-medium">الهدف اليومي</span></div>
                         <input type="number" id="daily-target-input" value="1000" class="glass-input w-24 text-center py-1 text-sm font-bold" onchange="saveTarget(this.value)">
                     </div>
-                    
-                    <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-4">
-                        <div class="flex items-center gap-3"><i class="fa-solid fa-cloud-arrow-up text-emerald-500 w-5"></i><span class="font-medium">المزامنة السحابية</span></div>
-                        <button onclick="forceSync()" class="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-lg text-xs font-bold active:scale-95 transition">مزامنة الآن</button>
-                    </div>
 
                     <div class="flex justify-between items-center text-red-500 pt-2 cursor-pointer active:opacity-50 transition" onclick="clearData()">
-                        <div class="flex items-center gap-3"><i class="fa-solid fa-trash-can w-5"></i><span class="font-bold">مسح الكاش الآلي</span></div>
+                        <div class="flex items-center gap-3"><i class="fa-solid fa-trash-can w-5"></i><span class="font-bold">تسجيل الخروج / مسح الكاش</span></div>
                     </div>
                 </div>
             </section>
@@ -312,261 +298,118 @@
                 </form>
             </div>
         </div>
-
         <div id="toast-container"></div>
     </div>
 
-    <script>
+    <script type="module">
+        // 1. Firebase Modules Import
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { 
+            getFirestore, collection, addDoc, query, orderBy, onSnapshot, enableIndexedDbPersistence 
+        } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
         // ==========================================
-        // 1. CONFIGURATION & CONSTANTS
+        // ⚠️ ضع إعدادات FIREBASE الخاصة بك هنا ⚠️
         // ==========================================
-        const API_URL = "https://script.google.com/macros/s/AKfycbxlEOFEDvf6to-SLWAeNreu0XzzjgdCjFquogRMEmGn7cuao8pr7WnOc6nTDHNa-CU9/exec";
-        
+       const firebaseConfig = {
+  apiKey: "AIzaSyCD9vVvHR_LiogzddMTjBalvMd11yI17bQ",
+  authDomain: "zaraa-pos.firebaseapp.com",
+  projectId: "zaraa-pos",
+storageBucket: "zaraa-pos.appspot.com",
+  messagingSenderId: "705034323363",
+  appId: "1:705034323363:web:8e616c3f672c9bb88b4616",
+
+};
+
+        // 2. Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+     
+        // 4. State Management
+        window.AppState = {
+            transactions: JSON.parse(localStorage.getItem('pos_transactions')) || [],
+            username: localStorage.getItem('pos_username') || '',
+            dailyTarget: parseInt(localStorage.getItem('pos_target')) || 1000
+        };
+
         const CATEGORY_ICONS = {
             'حجاب': 'fa-vest', 'إكسسوارات': 'fa-gem', 'بندانة': 'fa-ribbon',
             'شنطة': 'fa-bag-shopping', 'محفظة': 'fa-wallet', 'أخرى': 'fa-box-open'
         };
 
-        // ==========================================
-        // 2. STATE MANAGEMENT & STORAGE
-        // ==========================================
-        const AppState = {
-            transactions: JSON.parse(localStorage.getItem('pos_transactions')) || [],
-            offlineQueue: JSON.parse(localStorage.getItem('pos_queue')) || [],
-            lastActiveDate: localStorage.getItem('pos_last_date') || new Date().toLocaleDateString('en-CA'),
-            username: localStorage.getItem('pos_username') || '',
-            dailyTarget: parseInt(localStorage.getItem('pos_target')) || 1000,
-            isSyncing: false
-        };
+        let myChart = null;
+        let renderTimer = null;
 
-        function saveLocalData() {
-            localStorage.setItem('pos_transactions', JSON.stringify(AppState.transactions));
-            localStorage.setItem('pos_queue', JSON.stringify(AppState.offlineQueue));
-        }
-
-        // ==========================================
-        // 3. SECURITY & UTILS
-        // ==========================================
-        function sanitizeInput(str) {
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML.trim();
-        }
-
-        function generateUUID() {
-            return 'ZHR-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase();
-        }
-
-        // ==========================================
-        // 4. REAL-TIME SYNC ENGINE (CORE)
-        // ==========================================
-        const SyncEngine = {
-            status: 'offline', // synced, syncing, offline, error
-
-            setIndicator(newStatus) {
-                this.status = newStatus;
-                const el = document.getElementById('sync-status');
-                const ping = document.getElementById('sync-ping');
-                const badge = document.getElementById('offline-badge');
-                
-                el.className = 'relative inline-flex rounded-full h-3 w-3 transition-all duration-300';
-                ping.className = 'absolute inline-flex h-full w-full rounded-full opacity-0 transition-opacity';
-                
-                if (newStatus === 'synced') {
-                    el.classList.add('bg-emerald-500', 'shadow-[0_0_8px_#10b981]');
-                    badge.classList.add('hidden');
-                } else if (newStatus === 'syncing') {
-                    el.classList.add('bg-yellow-400', 'shadow-[0_0_8px_#facc15]');
-                    ping.classList.add('bg-yellow-400', 'animate-ping', 'opacity-75');
-                    badge.classList.add('hidden');
-                } else if (newStatus === 'offline') {
-                    el.classList.add('bg-red-500', 'shadow-[0_0_8px_#ef4444]');
-                    badge.classList.remove('hidden');
-                } else if (newStatus === 'error') {
-                    el.classList.add('bg-orange-500', 'shadow-[0_0_8px_#f97316]');
-                    badge.classList.remove('hidden');
-                }
-            },
-
-            async pushToServer(transaction) {
-                if (!navigator.onLine) {
-                    console.log("Offline Mode");
-                    this.setIndicator('offline');
-                    return false;
-                }
-
-                try {
-                    this.setIndicator('syncing');
-                    const formData = new FormData();
-                    formData.append("data", JSON.stringify(transaction));
-
-                    const response = await fetch(API_URL, { method: "POST", body: formData });
-                    await response.text(); // Parse safely
-                    
-                    transaction.synced = true;
-                    
-                    // Remove from offline queue safely
-                    AppState.offlineQueue = AppState.offlineQueue.filter(t => t.id !== transaction.id);
-                    
-                    // Mark as synced in local main array
-                    const localTx = AppState.transactions.find(t => t.id === transaction.id);
-                    if (localTx) localTx.synced = true;
-
-                    saveLocalData();
-                    console.log("Saved To Google Sheet");
-                    this.setIndicator('synced');
-                    return true;
-                } catch(error) {
-                    console.error(error);
-                    console.log("Sync Error");
-                    this.setIndicator('error');
-                    return false;
-                }
-            },
-
-            async processQueue() {
-                if (!navigator.onLine || AppState.offlineQueue.length === 0 || AppState.isSyncing) return;
-                
-                AppState.isSyncing = true;
-                let successCount = 0;
-                
-                // Copy queue to prevent mutation issues during loop
-                const queueCopy = [...AppState.offlineQueue];
-                
-                for (const tx of queueCopy) {
-                    const success = await this.pushToServer(tx);
-                    if (success) {
-                        console.log("Queue Retry Success");
-                        successCount++;
-                    } else {
-                        break; // Stop processing if one fails to preserve order
-                    }
-                }
-                
-                if (successCount > 0) queueRender();
-                AppState.isSyncing = false;
-            },
-
-            async fetchLatest() {
-                if (!navigator.onLine || AppState.isSyncing) return;
-                
-                console.log("Fetching Latest Transactions");
-                AppState.isSyncing = true;
-                this.setIndicator('syncing');
-
-                try {
-                    const response = await fetch(API_URL);
-                    const serverData = await response.json(); 
-                    let isUpdated = false;
-
-                    // Efficient Merge using Map
-                    const localMap = new Map(AppState.transactions.map(t => [t.id, t]));
-
-                    serverData.forEach(serverTx => {
-                        const localTx = localMap.get(serverTx.id);
-                        if (!localTx) {
-                            // Completely new transaction from another device
-                            AppState.transactions.push(serverTx);
-                            localMap.set(serverTx.id, serverTx);
-                            isUpdated = true;
-                        } else if (!localTx.synced) {
-                            // Already exists but local didn't know it was synced
-                            localTx.synced = true;
-                            isUpdated = true;
-                        }
-                    });
-
-                    if (isUpdated) {
-                        // Sort by Timestamp Descending (Newest First)
-                        AppState.transactions.sort((a, b) => b.timestamp - a.timestamp);
-                        saveLocalData();
-                        queueRender();
-                        console.log("Real-time Sync Complete");
-                    }
-
-                    this.setIndicator('synced');
-                } catch(error) {
-                    console.log("Sync Error");
-                    this.setIndicator('error');
-                } finally {
-                    AppState.isSyncing = false;
-                }
-            }
-        };
-
-        // ==========================================
-        // 5. EVENT LISTENERS (BACKGROUND & NETWORK)
-        // ==========================================
-        window.addEventListener('online', () => {
-            console.log("Network Reconnected");
-            showToast('عاد الاتصال بالإنترنت', 'success');
-            SyncEngine.setIndicator('syncing');
-            SyncEngine.processQueue().then(() => SyncEngine.fetchLatest());
-        });
-        
-        window.addEventListener('offline', () => {
-            console.log("Offline Mode");
-            SyncEngine.setIndicator('offline');
-            showToast('أنت الآن تعمل بدون إنترنت', 'error');
-        });
-
-        // Smart Background Refresh
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') {
-                SyncEngine.processQueue().then(() => SyncEngine.fetchLatest());
-            }
-        });
-        
-        window.addEventListener('focus', () => {
-            SyncEngine.processQueue().then(() => SyncEngine.fetchLatest());
-        });
-
-        // 3 Second Polling
-        setInterval(() => {
-            SyncEngine.processQueue().then(() => SyncEngine.fetchLatest());
-        }, 3000);
-
-
-        // ==========================================
-        // 6. INITIALIZATION & UI LOGIC
-        // ==========================================
-        function initApp() {
-            initTheme();
-            checkOnboarding();
-            checkMidnightArchive();
-            
-            if(AppState.username) {
-                document.getElementById('header-user').innerHTML = `مرحباً بك، <span class="font-bold text-slate-800 dark:text-white">${sanitizeInput(AppState.username)}</span>`;
-                document.getElementById('settings-username').textContent = sanitizeInput(AppState.username);
-            }
-            document.getElementById('daily-target-input').value = AppState.dailyTarget;
-
-            if(!navigator.onLine) SyncEngine.setIndicator('offline');
-            
-            queueRender();
-            initChart();
-            
-            // Initial Fetch
-            SyncEngine.processQueue().then(() => SyncEngine.fetchLatest());
-        }
-
-        // DEBOUNCED RENDERER
-        let renderTimer;
+        // 5. Debounced Renderer
         function queueRender() {
             clearTimeout(renderTimer);
             renderTimer = setTimeout(() => {
                 if(document.getElementById('view-dashboard').classList.contains('active')) renderDashboard();
                 if(document.getElementById('view-archive').classList.contains('active')) renderArchive();
                 if(document.getElementById('view-stats').classList.contains('active')) updateChart();
-            }, 100);
+            }, 50); // Fast 50ms debounce
         }
 
-        // --- FORM SUBMISSION ---
-        async function handleFormSubmit(e) {
+        // 6. Sync Indicator Logic
+        function setSyncIndicator(status) {
+            const el = document.getElementById('sync-status');
+            const ping = document.getElementById('sync-ping');
+            const badge = document.getElementById('offline-badge');
+            
+            el.className = 'relative inline-flex rounded-full h-3 w-3 transition-all duration-300';
+            ping.className = 'absolute inline-flex h-full w-full rounded-full opacity-0 transition-opacity';
+            
+            if (status === 'synced') {
+                el.classList.add('bg-emerald-500', 'shadow-[0_0_8px_#10b981]');
+                badge.classList.add('hidden');
+            } else if (status === 'syncing') {
+                el.classList.add('bg-yellow-400', 'shadow-[0_0_8px_#facc15]');
+                ping.classList.add('bg-yellow-400', 'animate-ping', 'opacity-75');
+                badge.classList.add('hidden');
+            } else if (status === 'offline') {
+                el.classList.add('bg-red-500', 'shadow-[0_0_8px_#ef4444]');
+                badge.classList.remove('hidden');
+            }
+        }
+
+        // 7. REAL-TIME LISTENER (The Core)
+        const salesQuery = query(collection(db, "sales"), orderBy("timestamp", "desc"));
+        
+        onSnapshot(salesQuery, (snapshot) => {
+            const txs = [];
+            
+            snapshot.forEach((doc) => {
+                txs.push({
+                    firebaseId: doc.id,
+                    ...doc.data()
+                });
+            });
+
+            window.AppState.transactions = txs;
+            localStorage.setItem('pos_transactions', JSON.stringify(txs));
+
+            // Smart indicator logic based on Firestore internal states
+            if (!navigator.onLine) {
+                setSyncIndicator('offline');
+            } else if (snapshot.metadata.hasPendingWrites) {
+                setSyncIndicator('syncing'); // Data saved locally, waiting for cloud
+            } else {
+                setSyncIndicator('synced');  // Everything perfectly in sync
+            }
+
+            queueRender();
+        }, (error) => {
+            console.error("Firebase Listen Error:", error);
+            setSyncIndicator('offline');
+        });
+
+        // 8. Form Submit to Firestore
+        window.handleFormSubmit = async (e) => {
             e.preventDefault();
             
             const btn = document.getElementById('submit-btn');
-            btn.disabled = true; // Prevent Double Clicks
+            btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
 
             const category = document.getElementById('item-category').value;
@@ -575,7 +418,7 @@
             const qty = parseInt(document.getElementById('item-qty').value);
             
             if(!name || price <= 0 || qty <= 0) {
-                showToast('بيانات غير صحيحة', 'error');
+                window.showToast('بيانات غير صحيحة', 'error');
                 btn.disabled = false;
                 btn.innerHTML = '<span>حفظ في السجل</span> <i class="fa-solid fa-check-circle"></i>';
                 return;
@@ -585,46 +428,39 @@
             const now = new Date();
 
             const transaction = {
-                id: generateUUID(),
                 category, name, price, qty, total,
                 date: now.toLocaleDateString('en-CA'),
                 time: now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
                 timestamp: now.getTime(),
-                synced: false
+                cashier: window.AppState.username
             };
 
-            // Save Locally
-            AppState.transactions.unshift(transaction);
-            AppState.offlineQueue.push(transaction);
-            saveLocalData();
-            
-            console.log("Offline Queue Saved");
-            queueRender();
-            closeAddModal();
-            showToast('تم تسجيل العملية بنجاح', 'success');
-
-            // Reset Button
-            setTimeout(() => {
+            try {
+                // Firebase will automatically queue this if offline and send when online!
+                await addDoc(collection(db, "sales"), transaction);
+                window.closeAddModal();
+                window.showToast('تم تسجيل العملية بنجاح', 'success');
+            } catch(error) {
+                console.error("Add Error:", error);
+                window.showToast('حدث خطأ أثناء الحفظ', 'error');
+            } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<span>حفظ في السجل</span> <i class="fa-solid fa-check-circle"></i>';
-            }, 500);
+            }
+        };
 
-            // Push Background
-            SyncEngine.pushToServer(transaction);
-        }
-
-        // --- RENDER FUNCTIONS ---
+        // 9. UI Rendering Logic
         function renderDashboard() {
             const today = new Date().toLocaleDateString('en-CA');
-            const todayTransactions = AppState.transactions.filter(t => t.date === today);
+            const todayTransactions = window.AppState.transactions.filter(t => t.date === today);
             
             const totalSales = todayTransactions.reduce((sum, t) => sum + t.total, 0);
             const totalItems = todayTransactions.reduce((sum, t) => sum + t.qty, 0);
             
-            animateValue("today-total-sales", 0, totalSales, 500);
+            window.animateValue("today-total-sales", 0, totalSales, 500);
             document.getElementById('today-total-items').textContent = totalItems;
 
-            let percent = Math.min(100, Math.round((totalSales / AppState.dailyTarget) * 100));
+            let percent = Math.min(100, Math.round((totalSales / window.AppState.dailyTarget) * 100));
             document.getElementById('target-bar').style.width = `${percent}%`;
             document.getElementById('target-percent').textContent = `${percent}%`;
             document.getElementById('target-bar').className = `h-full rounded-full transition-all duration-1000 ${percent >= 100 ? 'bg-yellow-400' : 'bg-emerald-500'}`;
@@ -636,7 +472,6 @@
                 listEl.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm glass-card border-dashed">لم تقم بأي مبيعات اليوم حتى الآن.</div>`;
                 return;
             }
-
             todayTransactions.slice(0, 5).forEach(t => listEl.innerHTML += createTransactionCard(t));
         }
 
@@ -644,7 +479,7 @@
             const listEl = document.getElementById('archive-list');
             listEl.innerHTML = '';
             
-            let filtered = AppState.transactions;
+            let filtered = window.AppState.transactions;
             const term = filterText.toLowerCase();
             if (term) {
                 filtered = filtered.filter(t => t.name.toLowerCase().includes(term) || t.category.includes(term));
@@ -681,8 +516,6 @@
 
         function createTransactionCard(t) {
             const icon = CATEGORY_ICONS[t.category] || CATEGORY_ICONS['أخرى'];
-            const syncIcon = t.synced ? '<i class="fa-solid fa-cloud-check text-emerald-500" title="متزامن"></i>' : '<i class="fa-solid fa-cloud-arrow-up text-slate-400" title="في قائمة الانتظار"></i>';
-            
             return `
             <div class="glass-card p-3 flex justify-between items-center hover:scale-[1.01] transition-transform shadow-sm">
                 <div class="flex items-center gap-3">
@@ -695,8 +528,6 @@
                             <span>${t.category}</span>
                             <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
                             <span>${t.time}</span>
-                            <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
-                            ${syncIcon}
                         </div>
                     </div>
                 </div>
@@ -707,168 +538,7 @@
             </div>`;
         }
 
-        // --- HELPERS & MINOR FEATURES ---
-        function forceSync() {
-            if(!navigator.onLine) { showToast('لا يوجد اتصال بالإنترنت', 'error'); return; }
-            showToast('جاري المزامنة مع السحابة...', 'info');
-            SyncEngine.processQueue().then(() => SyncEngine.fetchLatest());
-        }
-
-        function checkOnboarding() { if (!AppState.username) document.getElementById('onboarding-modal').classList.add('active'); }
-        
-        function saveUsername() {
-            const name = document.getElementById('username-input').value.trim();
-            if (name) {
-                AppState.username = name;
-                localStorage.setItem('pos_username', name);
-                document.getElementById('onboarding-modal').classList.remove('active');
-                initApp(); 
-                showToast(`أهلاً بك يا ${name} 🌸`, 'success');
-            } else showToast('يرجى إدخال اسم صحيح', 'error');
-        }
-
-        function editUsername() {
-            const newName = prompt("أدخل اسم الكاشير الجديد:", AppState.username);
-            if(newName && newName.trim()) {
-                AppState.username = newName.trim();
-                localStorage.setItem('pos_username', AppState.username);
-                initApp();
-            }
-        }
-
-        function saveTarget(val) {
-            AppState.dailyTarget = parseInt(val) || 1000;
-            localStorage.setItem('pos_target', AppState.dailyTarget);
-            queueRender();
-            showToast('تم تحديث الهدف اليومي', 'success');
-        }
-
-        function checkMidnightArchive() {
-            const today = new Date().toLocaleDateString('en-CA');
-            if (AppState.lastActiveDate !== today) {
-                AppState.lastActiveDate = today;
-                localStorage.setItem('pos_last_date', today);
-            }
-        }
-
-        function toggleTheme() {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('pos_theme', isDark ? 'dark' : 'light');
-            initTheme();
-            if(myChart) updateChart();
-        }
-
-        function initTheme() {
-            const theme = localStorage.getItem('pos_theme') || 'dark';
-            const icon = document.getElementById('theme-icon');
-            if (theme === 'dark') {
-                document.documentElement.classList.add('dark');
-                icon.className = 'fa-solid fa-sun text-yellow-400';
-            } else {
-                document.documentElement.classList.remove('dark');
-                icon.className = 'fa-solid fa-moon text-slate-600';
-            }
-        }
-
-        function switchView(viewId) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
-            
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('text-emerald-500', 'active');
-                btn.classList.add('text-slate-400');
-            });
-            event.currentTarget.classList.remove('text-slate-400');
-            event.currentTarget.classList.add('text-emerald-500', 'active');
-            queueRender();
-        }
-
-        function openAddModal() {
-            document.getElementById('add-modal').classList.add('active');
-            setTimeout(() => document.getElementById('item-name').focus(), 300);
-        }
-
-        function closeAddModal() {
-            document.getElementById('add-modal').classList.remove('active');
-            document.getElementById('add-form').reset();
-            document.getElementById('item-total-display').textContent = '0';
-        }
-
-        function adjustQty(amount) {
-            const input = document.getElementById('item-qty');
-            let val = parseInt(input.value) + amount;
-            input.value = Math.max(1, val);
-            calculateTotal();
-        }
-
-        function calculateTotal() {
-            const price = parseFloat(document.getElementById('item-price').value) || 0;
-            const qty = parseInt(document.getElementById('item-qty').value) || 1;
-            document.getElementById('item-total-display').textContent = (price * qty).toFixed(2);
-        }
-
-        function filterArchive() { queueRender(); }
-
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            const icon = type === 'success' ? '<i class="fa-solid fa-circle-check text-emerald-500 text-xl"></i>' : 
-                         type === 'error' ? '<i class="fa-solid fa-circle-exclamation text-red-500 text-xl"></i>' :
-                         '<i class="fa-solid fa-bell text-blue-500 text-xl"></i>';
-            toast.innerHTML = `${icon} <span class="text-sm">${sanitizeInput(message)}</span>`;
-            
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(-20px) scale(0.95)';
-                setTimeout(() => toast.remove(), 400);
-            }, 3000);
-        }
-
-        function animateValue(id, start, end, duration) {
-            let obj = document.getElementById(id);
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                const val = Math.floor(progress * (end - start) + start);
-                obj.innerHTML = `${val} <span class="text-xl text-slate-400">ج.م</span>`;
-                if (progress < 1) window.requestAnimationFrame(step);
-            };
-            window.requestAnimationFrame(step);
-        }
-
-        function clearData() {
-            if(confirm('تنبيه: سيؤدي هذا لمسح الكاش الآلي بالكامل من جهازك ولن تستطيع استعادة البيانات غير المتزامنة. هل أنت متأكد؟')) {
-                localStorage.clear();
-                location.reload();
-            }
-        }
-
-        async function copyInvoice() {
-            const today = new Date().toLocaleDateString('en-CA');
-            const todayTransactions = AppState.transactions.filter(t => t.date === today);
-            if(todayTransactions.length === 0) { showToast('لا توجد مبيعات لنسخها', 'error'); return; }
-            
-            let total = 0, text = `🌸 فاتورة زهرة الإيمان 🌸\nالكاشير: ${AppState.username}\nالتاريخ: ${new Date().toLocaleDateString('ar-EG')}\n------------------------\n`;
-            todayTransactions.forEach((t, i) => {
-                text += `${i+1}. ${t.name} | ${t.qty}x \n   بـ ${t.total} ج.م\n`;
-                total += t.total;
-            });
-            text += `------------------------\nالإجمالي: ${total} ج.م\nشكراً لزيارتكم!`;
-            
-            try {
-                await navigator.clipboard.writeText(text);
-                showToast('تم نسخ الفاتورة النصية!', 'success');
-            } catch(e) {
-                const ta = document.createElement("textarea"); ta.value = text;
-                document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove();
-                showToast('تم نسخ الفاتورة النصية!', 'success');
-            }
-        }
-
-        // --- CHARTS LOGIC ---
+        // Charts Logic
         function initChart() {
             const ctx = document.getElementById('salesChart').getContext('2d');
             Chart.defaults.color = document.documentElement.classList.contains('dark') ? '#94a3b8' : '#64748b';
@@ -887,7 +557,7 @@
 
         function updateChart() {
             const catStats = {};
-            AppState.transactions.forEach(t => {
+            window.AppState.transactions.forEach(t => {
                 if(!catStats[t.category]) catStats[t.category] = { total: 0 };
                 catStats[t.category].total += t.total;
             });
@@ -915,14 +585,14 @@
                     </div>`;
             });
 
-            // Update Chart Data (Last 7 Days)
+            // 7 Days Chart Update
             if(myChart) {
                 const days = []; const totals = [];
                 for(let i=6; i>=0; i--) {
                     const d = new Date(); d.setDate(d.getDate() - i);
                     const dateStr = d.toLocaleDateString('en-CA');
                     days.push(d.toLocaleDateString('ar-EG', {weekday:'short'}));
-                    totals.push(AppState.transactions.filter(t => t.date === dateStr).reduce((sum, t) => sum + t.total, 0));
+                    totals.push(window.AppState.transactions.filter(t => t.date === dateStr).reduce((sum, t) => sum + t.total, 0));
                 }
                 myChart.data.labels = days;
                 myChart.data.datasets[0].data = totals;
@@ -931,21 +601,103 @@
             }
         }
 
-        // START APP
-        window.onload = initApp;
+        // 10. Globals & Initializers
+        function sanitizeInput(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML.trim(); }
+        
+        window.switchView = function(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-emerald-500', 'active');
+                btn.classList.add('text-slate-400');
+            });
+            event.currentTarget.classList.remove('text-slate-400');
+            event.currentTarget.classList.add('text-emerald-500', 'active');
+            queueRender();
+        };
 
-        // Basic PWA Service Worker for Offline Fallback & Installability
-        if ('serviceWorker' in navigator) {
-            const swCode = `
-                self.addEventListener('install', e => self.skipWaiting());
-                self.addEventListener('activate', e => self.clients.claim());
-                self.addEventListener('fetch', e => {
-                    e.respondWith(fetch(e.request).catch(() => new Response('Offline', {status: 503, statusText: 'Offline'})));
-                });
-            `;
-            const blob = new Blob([swCode], { type: 'application/javascript' });
-            navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>console.log("SW Reg Error"));
+        window.openAddModal = function() { document.getElementById('add-modal').classList.add('active'); setTimeout(() => document.getElementById('item-name').focus(), 300); };
+        window.closeAddModal = function() { document.getElementById('add-modal').classList.remove('active'); document.getElementById('add-form').reset(); document.getElementById('item-total-display').textContent = '0'; };
+        window.adjustQty = function(amount) { const input = document.getElementById('item-qty'); input.value = Math.max(1, parseInt(input.value) + amount); window.calculateTotal(); };
+        window.calculateTotal = function() { const price = parseFloat(document.getElementById('item-price').value) || 0; const qty = parseInt(document.getElementById('item-qty').value) || 1; document.getElementById('item-total-display').textContent = (price * qty).toFixed(2); };
+        window.filterArchive = function() { renderArchive(document.getElementById('search-input').value); };
+        window.saveTarget = function(val) { window.AppState.dailyTarget = parseInt(val) || 1000; localStorage.setItem('pos_target', window.AppState.dailyTarget); queueRender(); window.showToast('تم التحديث', 'success'); };
+        window.editUsername = function() { const newName = prompt("اسم الكاشير:", window.AppState.username); if(newName && newName.trim()) { window.AppState.username = newName.trim(); localStorage.setItem('pos_username', window.AppState.username); initApp(); } };
+        window.clearData = function() { if(confirm('هل أنت متأكد من مسح حسابك من هذا الجهاز؟')) { localStorage.clear(); location.reload(); } };
+        
+        window.saveUsername = function() {
+            const name = document.getElementById('username-input').value.trim();
+            if (name) {
+                window.AppState.username = name; localStorage.setItem('pos_username', name);
+                document.getElementById('onboarding-modal').classList.remove('active');
+                initApp(); window.showToast(`أهلاً بك يا ${name} 🌸`, 'success');
+            } else window.showToast('يرجى إدخال اسم صحيح', 'error');
+        };
+
+        window.toggleTheme = function() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('pos_theme', isDark ? 'dark' : 'light');
+            const icon = document.getElementById('theme-icon');
+            icon.className = isDark ? 'fa-solid fa-sun text-yellow-400' : 'fa-solid fa-moon text-slate-600';
+            if(myChart) updateChart();
+        };
+
+        window.showToast = function(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div'); toast.className = 'toast';
+            const icon = type === 'success' ? '<i class="fa-solid fa-circle-check text-emerald-500 text-xl"></i>' : type === 'error' ? '<i class="fa-solid fa-circle-exclamation text-red-500 text-xl"></i>' : '<i class="fa-solid fa-bell text-blue-500 text-xl"></i>';
+            toast.innerHTML = `${icon} <span class="text-sm">${sanitizeInput(message)}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(-20px) scale(0.95)'; setTimeout(() => toast.remove(), 400); }, 3000);
+        };
+
+        window.animateValue = function(id, start, end, duration) {
+            let obj = document.getElementById(id); let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = `${Math.floor(progress * (end - start) + start)} <span class="text-xl text-slate-400">ج.م</span>`;
+                if (progress < 1) window.requestAnimationFrame(step);
+            }; window.requestAnimationFrame(step);
+        };
+
+        window.copyInvoice = async function() {
+            const today = new Date().toLocaleDateString('en-CA');
+            const txs = window.AppState.transactions.filter(t => t.date === today);
+            if(txs.length === 0) return window.showToast('لا توجد مبيعات', 'error');
+            let total = 0, text = `🌸 فاتورة زهرة الإيمان 🌸\nالكاشير: ${window.AppState.username}\nالتاريخ: ${new Date().toLocaleDateString('ar-EG')}\n------------------------\n`;
+            txs.forEach((t, i) => { text += `${i+1}. ${t.name} | ${t.qty}x \n   بـ ${t.total} ج.م\n`; total += t.total; });
+            text += `------------------------\nالإجمالي: ${total} ج.م\nشكراً لزيارتكم!`;
+            try { await navigator.clipboard.writeText(text); window.showToast('تم النسخ!', 'success'); } 
+            catch(e) { const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); window.showToast('تم النسخ!', 'success'); }
+        };
+
+        // Network Listeners
+        window.addEventListener('online', () => { setSyncIndicator('syncing'); window.showToast('عاد الاتصال بالإنترنت', 'success'); });
+        window.addEventListener('offline', () => { setSyncIndicator('offline'); window.showToast('أنت الآن تعمل بدون إنترنت', 'error'); });
+
+        function initApp() {
+            const theme = localStorage.getItem('pos_theme') || 'dark';
+            if (theme === 'dark') { document.documentElement.classList.add('dark'); document.getElementById('theme-icon').className = 'fa-solid fa-sun text-yellow-400'; }
+            else { document.documentElement.classList.remove('dark'); document.getElementById('theme-icon').className = 'fa-solid fa-moon text-slate-600'; }
+
+            if (!window.AppState.username) document.getElementById('onboarding-modal').classList.add('active');
+            
+            if(window.AppState.username) {
+                document.getElementById('header-user').innerHTML = `مرحباً بك، <span class="font-bold text-slate-800 dark:text-white">${sanitizeInput(window.AppState.username)}</span>`;
+                document.getElementById('settings-username').textContent = sanitizeInput(window.AppState.username);
+            }
+            document.getElementById('daily-target-input').value = window.AppState.dailyTarget;
+
+            if(!navigator.onLine) setSyncIndicator('offline');
+            initChart();
+            queueRender();
         }
+
+        // Start
+        initApp();
+
+      
     </script>
 </body>
 </html>
