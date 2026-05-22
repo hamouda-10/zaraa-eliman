@@ -129,7 +129,7 @@
                 <p id="header-user" class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium"></p>
             </div>
             <div class="flex items-center gap-3">
-                <span id="sync-status" class="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
+                <span id="sync-status" class="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] transition-colors duration-300"></span>
                 <button onclick="toggleTheme()" class="w-10 h-10 rounded-full glass-card flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10 transition">
                     <i id="theme-icon" class="fa-solid fa-moon"></i>
                 </button>
@@ -327,13 +327,10 @@
     </div>
 
     <script>
-
         // ===============================
-// GOOGLE APPS SCRIPT API
-// ===============================
-
-const API_URL = "https://script.google.com/macros/s/AKfycbyGP_VpFgJJ9NPf8ZuRXpA6TM6Tj-qSUEVCiuP5_JSYzpyByvSqX2aAQcaXAUXME03C/exec";
-
+        // GOOGLE APPS SCRIPT API
+        // ===============================
+        const API_URL = "https://script.google.com/macros/s/AKfycbzqxhpjKgOiTjLazUhq7cHCcXrGKbu__NqROSeIBdaUdEC9Hov_kwBF40s3A5xhKLq1/exec";
 
         // --- 1. State Management ---
         const AppState = {
@@ -388,7 +385,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbyGP_VpFgJJ9NPf8ZuRXpA6
             const isDark = html.classList.toggle('dark');
             localStorage.setItem('pos_theme', isDark ? 'dark' : 'light');
             initTheme();
-            if(myChart) updateChart(); // Redraw chart colors
+            if(myChart) updateChart();
         }
 
         function checkOnboarding() {
@@ -403,7 +400,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbyGP_VpFgJJ9NPf8ZuRXpA6
                 AppState.username = name;
                 localStorage.setItem('pos_username', name);
                 document.getElementById('onboarding-modal').classList.remove('active');
-                initApp(); // Re-render headers
+                initApp(); 
                 showToast(`أهلاً بك يا ${name} في زهرة الإيمان 🌸`, 'success');
             } else {
                 showToast('يرجى إدخال اسم صحيح', 'error');
@@ -495,134 +492,168 @@ const API_URL = "https://script.google.com/macros/s/AKfycbyGP_VpFgJJ9NPf8ZuRXpA6
         }
 
         // --- 4. Core Business Logic ---
-       async function handleFormSubmit(e) {
-    e.preventDefault();
+        async function handleFormSubmit(e) {
+            e.preventDefault();
 
-    const category = document.getElementById('item-category').value;
-    const name = document.getElementById('item-name').value;
-    const price = parseFloat(document.getElementById('item-price').value);
-    const qty = parseInt(document.getElementById('item-qty').value);
-    const total = price * qty;
+            const category = document.getElementById('item-category').value;
+            const name = document.getElementById('item-name').value;
+            const price = parseFloat(document.getElementById('item-price').value);
+            const qty = parseInt(document.getElementById('item-qty').value);
+            const total = price * qty;
+            const now = new Date();
 
-    const now = new Date();
+            const transaction = {
+                id: 'ZHR-' + Math.random().toString(36).substr(2, 6).toUpperCase(),
+                category,
+                name,
+                price,
+                qty,
+                total,
+                date: now.toLocaleDateString('en-CA'),
+                time: now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+                timestamp: now.getTime(),
+                synced: false
+            };
 
-    const transaction = {
-        id: 'ZHR-' + Math.random().toString(36).substr(2, 6).toUpperCase(),
-        category,
-        name,
-        price,
-        qty,
-        total,
-        date: now.toLocaleDateString('en-CA'),
-        time: now.toLocaleTimeString('ar-EG', {
-            hour: '2-digit',
-            minute: '2-digit'
-        }),
-        timestamp: now.getTime(),
-        synced: false
-    };
+            // Save locally first
+            AppState.transactions.unshift(transaction);
+            AppState.offlineQueue.push(transaction); // Add to queue in case sync fails
 
-    // حفظ محلي
-    AppState.transactions.unshift(transaction);
-
-    localStorage.setItem(
-        'pos_transactions',
-        JSON.stringify(AppState.transactions)
-    );
-
-    renderDashboard();
-
-    closeAddModal();
-
-    showToast('تم حفظ العملية', 'success');
-
-    // إرسال للسيرفر
-    await sendToServer(transaction);
-}
-
-// ===============================
-// SEND DATA TO GOOGLE SHEETS
-// ===============================
-
-async function sendToServer(transaction) {
-
-    try {
-
-        const response = await fetch(API_URL, {
-            method: "POST",
-            body: JSON.stringify(transaction),
-            headers: {
-                "Content-Type": "application/json"
-            }
-        });
-
-        const result = await response.json();
-
-        if(result.success){
-
-            transaction.synced = true;
-
-            localStorage.setItem(
-                'pos_transactions',
-                JSON.stringify(AppState.transactions)
-            );
-
-            document.getElementById('sync-status')
-                .classList
-                .replace('bg-red-500','bg-emerald-500');
-
-        }
-
-    } catch(error){
-
-        console.log("Offline Mode");
-
-        document.getElementById('sync-status')
-            .classList
-            .replace('bg-emerald-500','bg-red-500');
-
-    }
-}
-
-// ===============================
-// REALTIME SYNC
-// ===============================
-
-async function fetchLatestTransactions(){
-
-    try{
-
-        const response = await fetch(API_URL);
-
-        const serverData = await response.json();
-
-        if(serverData.length > AppState.transactions.length){
-
-            AppState.transactions = serverData.reverse();
-
-            localStorage.setItem(
-                'pos_transactions',
-                JSON.stringify(AppState.transactions)
-            );
+            localStorage.setItem('pos_transactions', JSON.stringify(AppState.transactions));
+            localStorage.setItem('pos_queue', JSON.stringify(AppState.offlineQueue));
 
             renderDashboard();
+            closeAddModal();
+            showToast('تم حفظ العملية', 'success');
 
-            renderArchive();
-
-            updateChart();
-
-            showToast('تم تحديث البيانات', 'success');
+            // Send to server
+            await sendToServer(transaction);
         }
 
-    }catch(error){
+        // ===============================
+        // NETWORK SYNC LOGIC
+        // ===============================
 
-        console.log("Sync Error");
+        function setSyncStatusIndicator(status) {
+            const el = document.getElementById('sync-status');
+            el.classList.remove('bg-emerald-500', 'bg-red-500', 'bg-yellow-400', 'shadow-[0_0_8px_#10b981]', 'shadow-[0_0_8px_#ef4444]', 'shadow-[0_0_8px_#facc15]');
+            
+            if (status === 'synced') {
+                el.classList.add('bg-emerald-500', 'shadow-[0_0_8px_#10b981]');
+            } else if (status === 'error' || status === 'offline') {
+                el.classList.add('bg-red-500', 'shadow-[0_0_8px_#ef4444]');
+            } else if (status === 'syncing') {
+                el.classList.add('bg-yellow-400', 'shadow-[0_0_8px_#facc15]');
+            }
+        }
 
-    }
-}
+        async function sendToServer(transaction) {
+            if (!navigator.onLine) {
+                console.log("Offline Mode");
+                setSyncStatusIndicator('offline');
+                return;
+            }
 
-// تحديث كل 5 ثواني
-setInterval(fetchLatestTransactions,5000);
+            try {
+                setSyncStatusIndicator('syncing');
+
+                // VERY IMPORTANT: Use FormData with a "data" field containing serialized JSON
+                const formData = new FormData();
+                formData.append("data", JSON.stringify(transaction));
+
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    body: formData
+                });
+
+                // Parse using response.text() then JSON.parse()
+                const text = await response.text();
+                
+                try {
+                    const result = JSON.parse(text); 
+                    console.log("Server Response:", result);
+                } catch(e) {
+                    console.log("Non-JSON Server Response:", text);
+                }
+
+                // Success
+                transaction.synced = true;
+                
+                // Remove from offline queue
+                AppState.offlineQueue = AppState.offlineQueue.filter(t => t.id !== transaction.id);
+                localStorage.setItem('pos_queue', JSON.stringify(AppState.offlineQueue));
+                
+                // Update local transactions array to mark as synced
+                const localIndex = AppState.transactions.findIndex(t => t.id === transaction.id);
+                if (localIndex !== -1) {
+                    AppState.transactions[localIndex].synced = true;
+                    localStorage.setItem('pos_transactions', JSON.stringify(AppState.transactions));
+                }
+
+                setSyncStatusIndicator('synced');
+                console.log("Saved To Google Sheet");
+
+            } catch(error) {
+                console.log("Sync Error");
+                console.error(error);
+                setSyncStatusIndicator('error');
+            }
+        }
+
+        // Realtime Polling & Queue Processing
+        async function fetchLatestTransactions() {
+            if (!navigator.onLine) {
+                console.log("Offline Mode");
+                setSyncStatusIndicator('offline');
+                return;
+            }
+
+            // 1. Send unsynced queued items first
+            if (AppState.offlineQueue.length > 0) {
+                for (let i = 0; i < AppState.offlineQueue.length; i++) {
+                    await sendToServer(AppState.offlineQueue[i]);
+                }
+            }
+
+            // 2. Fetch latest data from server
+            try {
+                setSyncStatusIndicator('syncing');
+                const response = await fetch(API_URL);
+                const serverData = await response.json(); 
+
+                let isUpdated = false;
+
+                // Compare and append missing records
+                serverData.forEach(serverTx => {
+                    const existsLocally = AppState.transactions.find(localTx => localTx.id === serverTx.id);
+                    if (!existsLocally) {
+                        AppState.transactions.push(serverTx);
+                        isUpdated = true;
+                    }
+                });
+
+                if (isUpdated) {
+                    // Sort descending by timestamp
+                    AppState.transactions.sort((a, b) => b.timestamp - a.timestamp);
+                    localStorage.setItem('pos_transactions', JSON.stringify(AppState.transactions));
+                    
+                    renderDashboard();
+                    if(document.getElementById('view-archive').classList.contains('active')) renderArchive();
+                    if(document.getElementById('view-stats').classList.contains('active')) updateChart();
+                    
+                    showToast('تم تحديث البيانات لحظياً', 'success');
+                }
+
+                setSyncStatusIndicator('synced');
+
+            } catch(error) {
+                console.log("Sync Error");
+                setSyncStatusIndicator('error');
+            }
+        }
+
+        // Poll backend every 5 seconds for Real-Time Sync
+        setInterval(fetchLatestTransactions, 5000);
 
         // --- 5. Export to Text Invoice ---
         async function copyInvoice() {
@@ -652,7 +683,6 @@ setInterval(fetchLatestTransactions,5000);
                 await navigator.clipboard.writeText(text);
                 showToast('تم نسخ الفاتورة النصية بنجاح!', 'success');
             } catch(e) {
-                // Fallback for older browsers
                 const textArea = document.createElement("textarea");
                 textArea.value = text;
                 document.body.appendChild(textArea);
@@ -674,7 +704,6 @@ setInterval(fetchLatestTransactions,5000);
             animateValue("today-total-sales", 0, totalSales, 500);
             document.getElementById('today-total-items').textContent = totalItems;
 
-            // Target Logic
             let percent = Math.min(100, Math.round((totalSales / AppState.dailyTarget) * 100));
             document.getElementById('target-bar').style.width = `${percent}%`;
             document.getElementById('target-percent').textContent = `${percent}%`;
@@ -743,6 +772,7 @@ setInterval(fetchLatestTransactions,5000);
                             <span>${t.category}</span>
                             <span>•</span>
                             <span>${t.time}</span>
+                            ${t.synced ? '<span class="text-emerald-500"><i class="fa-solid fa-cloud-check"></i></span>' : ''}
                         </div>
                     </div>
                 </div>
@@ -815,21 +845,21 @@ setInterval(fetchLatestTransactions,5000);
         // --- 8. Sync & Helper ---
         function setupNetworkListeners() {
             window.addEventListener('online', () => {
-                document.getElementById('sync-status').classList.replace('bg-red-500', 'bg-emerald-500');
+                setSyncStatusIndicator('synced');
                 showToast('عاد الإنترنت، تمت المزامنة السحابية', 'success');
+                fetchLatestTransactions(); // Force sync when coming back online
             });
             window.addEventListener('offline', () => {
-                document.getElementById('sync-status').classList.replace('bg-emerald-500', 'bg-red-500');
+                setSyncStatusIndicator('offline');
                 showToast('أنت الآن تعمل بدون إنترنت (Offline)', 'error');
             });
-            if(!navigator.onLine) document.getElementById('sync-status').classList.replace('bg-emerald-500', 'bg-red-500');
+            if(!navigator.onLine) setSyncStatusIndicator('offline');
         }
 
         function forceSync() {
             if(!navigator.onLine) { showToast('لا يوجد اتصال بالإنترنت', 'error'); return; }
-            showToast('تمت المزامنة بنجاح ☁️', 'success');
-            AppState.offlineQueue = [];
-            localStorage.setItem('pos_queue', JSON.stringify([]));
+            fetchLatestTransactions();
+            showToast('جاري المزامنة...', 'info');
         }
 
         function animateValue(id, start, end, duration) {
