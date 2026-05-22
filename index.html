@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>زهرة الإيمان - نظام المبيعات</title>
+    
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Tajawal', 'sans-serif'] },
+                    colors: {
+                        primary: '#10b981', // Emerald
+                        secondary: '#06b6d4', // Cyan
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Glassmorphism Adapting to Light/Dark */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .glass-input {
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 1rem;
+            color: #1e293b;
+            transition: all 0.3s ease;
+        }
+        .dark .glass-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .glass-input:focus { border-color: #10b981; outline: none; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); }
+
+        /* Animations */
+        .view-section { display: none; animation: fadeIn 0.4s ease forwards; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .modal-overlay {
+            display: none; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+            position: fixed; inset: 0; z-index: 50;
+        }
+        .modal-overlay.active { display: flex; }
+        
+        .bottom-modal-content {
+            position: absolute; bottom: -100%; left: 0; right: 0;
+            border-radius: 2rem 2rem 0 0;
+            padding: 1.5rem; transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-overlay.active .bottom-modal-content { bottom: 0; }
+
+        /* Scrollbar hide */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Toast Container */
+        #toast-container { position: fixed; top: 1rem; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; }
+        .toast { padding: 12px 20px; border-radius: 12px; display: flex; align-items: center; gap: 10px; animation: fadeInDown 0.3s ease forwards; font-weight: 500;}
+        .dark .toast { background: rgba(15,23,42,0.9); border: 1px solid rgba(255,255,255,0.1); color: white; }
+        html:not(.dark) .toast { background: white; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.1); color: #1e293b; }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Background Orbs */
+        .bg-orb-1 { position: absolute; top: -50px; right: -50px; width: 250px; height: 250px; background: radial-gradient(circle, rgba(16,185,129,0.2) 0%, rgba(0,0,0,0) 70%); border-radius: 50%; filter: blur(40px); z-index: -1; }
+        .bg-orb-2 { position: absolute; bottom: 50px; left: -50px; width: 300px; height: 300px; background: radial-gradient(circle, rgba(6,182,212,0.15) 0%, rgba(0,0,0,0) 70%); border-radius: 50%; filter: blur(40px); z-index: -1; }
+    </style>
+</head>
+<body class="h-screen w-full flex justify-center bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100">
+
+    <div class="bg-orb-1"></div>
+    <div class="bg-orb-2"></div>
+
+    <div id="onboarding-modal" class="modal-overlay items-center justify-center bg-white dark:bg-slate-900 !backdrop-blur-xl z-[100]">
+        <div class="w-[90%] max-w-sm glass-card p-8 text-center bg-white dark:bg-slate-800 border dark:border-slate-700">
+            <div class="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 shadow-lg shadow-emerald-500/20">
+                <i class="fa-solid fa-leaf"></i>
+            </div>
+            <h2 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-500 mb-2">زهرة الإيمان</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">أهلاً بك! يرجى إدخال اسم المستخدم للبدء في النظام.</p>
+            
+            <input type="text" id="username-input" class="glass-input w-full p-3 text-center font-bold mb-4" placeholder="اسم الكاشير أو مدير المحل...">
+            
+            <button onclick="saveUsername()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-500/30 active:scale-95 transition">
+                دخول النظام
+            </button>
+        </div>
+    </div>
+
+    <div class="w-full max-w-md h-full flex flex-col relative bg-transparent">
+        
+        <header class="pt-10 pb-4 px-6 flex justify-between items-center z-10 relative">
+            <div>
+                <h1 class="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-500 tracking-tight">زهرة الإيمان <i class="fa-solid fa-leaf text-lg text-emerald-500 ml-1"></i></h1>
+                <p id="header-user" class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium"></p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="sync-status" class="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
+                <button onclick="toggleTheme()" class="w-10 h-10 rounded-full glass-card flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10 transition">
+                    <i id="theme-icon" class="fa-solid fa-moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto no-scrollbar px-5 pb-24 z-10 relative" id="main-content">
+            
+            <section id="view-dashboard" class="view-section active space-y-6">
+                <div class="glass-card p-6 relative overflow-hidden bg-white/50 dark:bg-slate-800/50">
+                    <div class="absolute top-0 left-0 w-32 h-32 bg-emerald-500/10 rounded-full filter blur-3xl"></div>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">مبيعات اليوم</p>
+                    <h2 class="text-4xl font-black mt-2 mb-4 text-slate-800 dark:text-white" id="today-total-sales">0 <span class="text-xl text-slate-400">ج.م</span></h2>
+                    
+                    <div class="flex flex-col gap-3 border-t border-slate-200 dark:border-slate-700/50 pt-4 mt-2">
+                        <div class="flex justify-between items-center text-sm">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-box"></i></div>
+                                <div>
+                                    <p class="text-slate-500 dark:text-slate-400 text-[10px]">المنتجات</p>
+                                    <p class="font-bold text-slate-800 dark:text-white" id="today-total-items">0</p>
+                                </div>
+                            </div>
+                            <div class="text-left w-32">
+                                <div class="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 mb-1">
+                                    <span>الهدف اليومي</span>
+                                    <span id="target-percent">0%</span>
+                                </div>
+                                <div class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                    <div id="target-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <button onclick="copyInvoice()" class="glass-card w-full flex items-center justify-center p-3 gap-3 hover:bg-slate-100 dark:hover:bg-white/10 transition active:scale-95 shadow-sm">
+                        <i class="fa-solid fa-copy text-teal-500 text-xl"></i>
+                        <span class="text-sm font-bold text-slate-700 dark:text-slate-300">نسخ فاتورة مبيعات اليوم</span>
+                    </button>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-end mb-4 px-1">
+                        <h3 class="font-bold text-lg text-slate-800 dark:text-white">أحدث المبيعات</h3>
+                        <button onclick="switchView('view-archive')" class="text-emerald-500 text-xs font-bold">عرض السجل</button>
+                    </div>
+                    <div id="recent-transactions-list" class="space-y-3">
+                        </div>
+                </div>
+            </section>
+
+            <section id="view-archive" class="view-section space-y-6">
+                <div class="glass-card p-3 flex gap-2 bg-white dark:bg-slate-800/80">
+                    <input type="text" id="search-input" placeholder="بحث باسم المنتج أو القسم..." class="glass-input flex-1 px-4 py-2 text-sm" onkeyup="filterArchive()">
+                </div>
+                <div id="archive-list" class="space-y-4">
+                    </div>
+            </section>
+
+            <section id="view-stats" class="view-section space-y-6">
+                <h2 class="text-2xl font-bold mb-4">تحليلات</h2>
+                <div class="glass-card p-4 bg-white dark:bg-slate-800/80">
+                    <canvas id="salesChart" height="200"></canvas>
+                </div>
+                <div class="glass-card p-5 bg-white dark:bg-slate-800/80">
+                    <h3 class="font-bold mb-4">الأقسام الأكثر مبيعاً</h3>
+                    <div class="space-y-4" id="best-categories">
+                        </div>
+                </div>
+            </section>
+
+            <section id="view-settings" class="view-section space-y-4">
+                <h2 class="text-2xl font-bold mb-4">إعدادات الحساب</h2>
+                
+                <div class="glass-card p-5 space-y-5 bg-white dark:bg-slate-800/80">
+                    <div class="flex items-center gap-4 border-b border-slate-200 dark:border-slate-700 pb-4">
+                        <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center text-xl font-bold shadow-inner">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">اسم الكاشير / المالك</p>
+                            <h3 class="font-bold text-lg" id="settings-username">---</h3>
+                        </div>
+                        <button onclick="editUsername()" class="mr-auto text-slate-400 hover:text-emerald-500"><i class="fa-solid fa-pen"></i></button>
+                    </div>
+
+                    <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-4">
+                        <div class="flex items-center gap-3"><i class="fa-solid fa-bullseye text-teal-500"></i><span class="font-medium">تحديد الهدف اليومي</span></div>
+                        <input type="number" id="daily-target-input" value="1000" class="glass-input w-24 text-center py-1 text-sm font-bold" onchange="saveTarget(this.value)">
+                    </div>
+                    
+                    <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-4">
+                        <div class="flex items-center gap-3"><i class="fa-solid fa-cloud text-emerald-500"></i><span class="font-medium">مزامنة البيانات</span></div>
+                        <button onclick="forceSync()" class="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-lg text-xs font-bold">مزامنة الآن</button>
+                    </div>
+
+                    <div class="flex justify-between items-center text-red-500 pt-2 cursor-pointer active:opacity-50" onclick="clearData()">
+                        <div class="flex items-center gap-3"><i class="fa-solid fa-trash-can"></i><span class="font-bold">حذف جميع السجلات</span></div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <nav class="absolute bottom-0 w-full glass-card rounded-b-none rounded-t-3xl bg-white/80 dark:bg-slate-900/80 z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] border-b-0 border-x-0 border-t border-slate-200 dark:border-slate-700/50 pb-2">
+            <div class="relative flex justify-around items-center h-16 px-2">
+                
+                <button onclick="switchView('view-dashboard')" class="nav-btn active flex flex-col items-center gap-1 text-emerald-500 w-14 transition-colors">
+                    <i class="fa-solid fa-house text-[18px]"></i>
+                    <span class="text-[10px] font-bold">الرئيسية</span>
+                </button>
+                
+                <button onclick="switchView('view-archive')" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 w-14 transition-colors">
+                    <i class="fa-solid fa-list-check text-[18px]"></i>
+                    <span class="text-[10px] font-bold">السجل</span>
+                </button>
+                
+                <div class="w-16 flex justify-center relative">
+                    <button onclick="openAddModal()" class="absolute -top-10 w-16 h-16 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full shadow-[0_4px_20px_rgba(16,185,129,0.4)] flex items-center justify-center text-white text-3xl z-40 transition transform hover:scale-105 active:scale-95 border-4 border-slate-50 dark:border-slate-950">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+
+                <button onclick="switchView('view-stats')" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 w-14 transition-colors">
+                    <i class="fa-solid fa-chart-pie text-[18px]"></i>
+                    <span class="text-[10px] font-bold">تحليلات</span>
+                </button>
+                
+                <button onclick="switchView('view-settings')" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 w-14 transition-colors">
+                    <i class="fa-solid fa-gear text-[18px]"></i>
+                    <span class="text-[10px] font-bold">إعدادات</span>
+                </button>
+
+            </div>
+        </nav>
+
+        <div id="add-modal" class="modal-overlay">
+            <div class="bottom-modal-content h-[85vh] flex flex-col bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 shadow-2xl">
+                <div class="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mb-6"></div>
+                <div class="flex justify-between items-center mb-6 px-1">
+                    <h2 class="text-xl font-bold text-slate-800 dark:text-white">إضافة منتج مباع</h2>
+                    <button onclick="closeAddModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-2"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                
+                <form id="add-form" class="flex-1 overflow-y-auto no-scrollbar space-y-4 pb-10 px-1" onsubmit="handleFormSubmit(event)">
+                    
+                    <div>
+                        <label class="text-xs text-slate-500 dark:text-slate-400 mb-1.5 block font-bold">القسم</label>
+                        <select id="item-category" required class="glass-input w-full p-3.5 appearance-none bg-white dark:bg-slate-800 font-medium">
+                            <option value="" disabled selected>اختر القسم...</option>
+                            <option value="حجاب">حجاب</option>
+                            <option value="إكسسوارات">إكسسوارات</option>
+                            <option value="بندانة">بندانة</option>
+                            <option value="شنطة">شنطة</option>
+                            <option value="محفظة">محفظة</option>
+                            <option value="أخرى">أخرى</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-slate-500 dark:text-slate-400 mb-1.5 block font-bold">الموديل / الوصف</label>
+                        <input type="text" id="item-name" required class="glass-input w-full p-3.5 bg-white dark:bg-slate-800" placeholder="مثال: شنطة كروس أسود">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs text-slate-500 dark:text-slate-400 mb-1.5 block font-bold">سعر القطعة (ج)</label>
+                            <input type="number" id="item-price" required min="1" step="0.5" class="glass-input w-full p-3.5 text-lg font-black bg-white dark:bg-slate-800" placeholder="0.00" oninput="calculateTotal()">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-500 dark:text-slate-400 mb-1.5 block font-bold">الكمية</label>
+                            <div class="flex items-center glass-input bg-white dark:bg-slate-800 h-[56px] rounded-2xl overflow-hidden">
+                                <button type="button" class="w-12 h-full text-emerald-500 font-bold bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100" onclick="adjustQty(-1)">-</button>
+                                <input type="number" id="item-qty" required min="1" value="1" class="flex-1 w-full h-full text-center font-black outline-none bg-transparent" oninput="calculateTotal()">
+                                <button type="button" class="w-12 h-full text-emerald-500 font-bold bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100" onclick="adjustQty(1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-5 mt-6 border border-emerald-500/20 bg-emerald-50 dark:bg-emerald-900/20 text-center rounded-2xl">
+                        <p class="text-xs text-emerald-600 dark:text-emerald-400 font-bold mb-1">الإجمالي المطلوب</p>
+                        <h3 class="text-4xl font-black text-slate-800 dark:text-white"><span id="item-total-display">0</span> <span class="text-sm font-bold text-slate-500">ج.م</span></h3>
+                    </div>
+
+                    <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-lg py-4 rounded-2xl shadow-lg shadow-emerald-500/30 mt-6 active:scale-95 transition-transform">
+                        حفظ في السجل
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div id="toast-container"></div>
+    </div>
+
+    <script>
+
+        // ===============================
+// GOOGLE APPS SCRIPT API
+// ===============================
+
+const API_URL = "https://script.google.com/macros/s/AKfycbyGP_VpFgJJ9NPf8ZuRXpA6TM6Tj-qSUEVCiuP5_JSYzpyByvSqX2aAQcaXAUXME03C/exec";
+
+
+        // --- 1. State Management ---
+        const AppState = {
+            transactions: JSON.parse(localStorage.getItem('pos_transactions')) || [],
+            offlineQueue: JSON.parse(localStorage.getItem('pos_queue')) || [],
+            lastActiveDate: localStorage.getItem('pos_last_date') || new Date().toLocaleDateString('en-CA'),
+            username: localStorage.getItem('pos_username') || '',
+            dailyTarget: parseInt(localStorage.getItem('pos_target')) || 1000
+        };
+
+        const CATEGORY_ICONS = {
+            'حجاب': 'fa-vest', 'إكسسوارات': 'fa-gem', 'بندانة': 'fa-ribbon',
+            'شنطة': 'fa-bag-shopping', 'محفظة': 'fa-wallet', 'أخرى': 'fa-box-open'
+        };
+
+        let myChart = null;
+
+        // --- 2. Initialization ---
+        function initApp() {
+            initTheme();
+            checkOnboarding();
+            checkMidnightArchive();
+            
+            if(AppState.username) {
+                document.getElementById('header-user').innerHTML = `مرحباً بك، <span class="font-bold text-slate-700 dark:text-white">${AppState.username}</span>`;
+                document.getElementById('settings-username').textContent = AppState.username;
+            }
+            document.getElementById('daily-target-input').value = AppState.dailyTarget;
+
+            renderDashboard();
+            initChart();
+            setupNetworkListeners();
+        }
+
+        // --- Theme & Onboarding ---
+        function initTheme() {
+            const theme = localStorage.getItem('pos_theme') || 'dark';
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            
+            if (theme === 'dark') {
+                html.classList.add('dark');
+                icon.className = 'fa-solid fa-sun text-yellow-400';
+            } else {
+                html.classList.remove('dark');
+                icon.className = 'fa-solid fa-moon text-slate-600';
+            }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.classList.toggle('dark');
+            localStorage.setItem('pos_theme', isDark ? 'dark' : 'light');
+            initTheme();
+            if(myChart) updateChart(); // Redraw chart colors
+        }
+
+        function checkOnboarding() {
+            if (!AppState.username) {
+                document.getElementById('onboarding-modal').classList.add('active');
+            }
+        }
+
+        function saveUsername() {
+            const name = document.getElementById('username-input').value.trim();
+            if (name) {
+                AppState.username = name;
+                localStorage.setItem('pos_username', name);
+                document.getElementById('onboarding-modal').classList.remove('active');
+                initApp(); // Re-render headers
+                showToast(`أهلاً بك يا ${name} في زهرة الإيمان 🌸`, 'success');
+            } else {
+                showToast('يرجى إدخال اسم صحيح', 'error');
+            }
+        }
+
+        function editUsername() {
+            const newName = prompt("أدخل اسم الكاشير الجديد:", AppState.username);
+            if(newName && newName.trim()) {
+                AppState.username = newName.trim();
+                localStorage.setItem('pos_username', AppState.username);
+                initApp();
+            }
+        }
+
+        function saveTarget(val) {
+            AppState.dailyTarget = parseInt(val) || 1000;
+            localStorage.setItem('pos_target', AppState.dailyTarget);
+            renderDashboard();
+            showToast('تم تحديث الهدف اليومي', 'success');
+        }
+
+        function checkMidnightArchive() {
+            const today = new Date().toLocaleDateString('en-CA');
+            if (AppState.lastActiveDate !== today) {
+                AppState.lastActiveDate = today;
+                localStorage.setItem('pos_last_date', today);
+                showToast('بدأ يوم عمل جديد! 🌅', 'success');
+            }
+        }
+
+        // --- 3. UI Navigation & Interaction ---
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-emerald-500', 'active');
+                btn.classList.add('text-slate-400');
+            });
+            event.currentTarget.classList.remove('text-slate-400');
+            event.currentTarget.classList.add('text-emerald-500', 'active');
+
+            if(viewId === 'view-archive') renderArchive();
+            if(viewId === 'view-stats') updateChart();
+        }
+
+        function openAddModal() {
+            document.getElementById('add-modal').classList.add('active');
+            setTimeout(() => document.getElementById('item-name').focus(), 100);
+        }
+
+        function closeAddModal() {
+            document.getElementById('add-modal').classList.remove('active');
+            document.getElementById('add-form').reset();
+            document.getElementById('item-total-display').textContent = '0';
+        }
+
+        function adjustQty(amount) {
+            const input = document.getElementById('item-qty');
+            let val = parseInt(input.value) + amount;
+            if (val < 1) val = 1;
+            input.value = val;
+            calculateTotal();
+        }
+
+        function calculateTotal() {
+            const price = parseFloat(document.getElementById('item-price').value) || 0;
+            const qty = parseInt(document.getElementById('item-qty').value) || 1;
+            document.getElementById('item-total-display').textContent = (price * qty).toFixed(2);
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            const icon = type === 'success' ? '<i class="fa-solid fa-circle-check text-emerald-500 text-lg"></i>' : 
+                         type === 'error' ? '<i class="fa-solid fa-circle-exclamation text-red-500 text-lg"></i>' :
+                         '<i class="fa-solid fa-bell text-blue-500 text-lg"></i>';
+            toast.innerHTML = `${icon} <span class="text-sm">${message}</span>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // --- 4. Core Business Logic ---
+       async function handleFormSubmit(e) {
+    e.preventDefault();
+
+    const category = document.getElementById('item-category').value;
+    const name = document.getElementById('item-name').value;
+    const price = parseFloat(document.getElementById('item-price').value);
+    const qty = parseInt(document.getElementById('item-qty').value);
+    const total = price * qty;
+
+    const now = new Date();
+
+    const transaction = {
+        id: 'ZHR-' + Math.random().toString(36).substr(2, 6).toUpperCase(),
+        category,
+        name,
+        price,
+        qty,
+        total,
+        date: now.toLocaleDateString('en-CA'),
+        time: now.toLocaleTimeString('ar-EG', {
+            hour: '2-digit',
+            minute: '2-digit'
+        }),
+        timestamp: now.getTime(),
+        synced: false
+    };
+
+    // حفظ محلي
+    AppState.transactions.unshift(transaction);
+
+    localStorage.setItem(
+        'pos_transactions',
+        JSON.stringify(AppState.transactions)
+    );
+
+    renderDashboard();
+
+    closeAddModal();
+
+    showToast('تم حفظ العملية', 'success');
+
+    // إرسال للسيرفر
+    await sendToServer(transaction);
+}
+
+// ===============================
+// SEND DATA TO GOOGLE SHEETS
+// ===============================
+
+async function sendToServer(transaction) {
+
+    try {
+
+        const response = await fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify(transaction),
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        const result = await response.json();
+
+        if(result.success){
+
+            transaction.synced = true;
+
+            localStorage.setItem(
+                'pos_transactions',
+                JSON.stringify(AppState.transactions)
+            );
+
+            document.getElementById('sync-status')
+                .classList
+                .replace('bg-red-500','bg-emerald-500');
+
+        }
+
+    } catch(error){
+
+        console.log("Offline Mode");
+
+        document.getElementById('sync-status')
+            .classList
+            .replace('bg-emerald-500','bg-red-500');
+
+    }
+}
+
+// ===============================
+// REALTIME SYNC
+// ===============================
+
+async function fetchLatestTransactions(){
+
+    try{
+
+        const response = await fetch(API_URL);
+
+        const serverData = await response.json();
+
+        if(serverData.length > AppState.transactions.length){
+
+            AppState.transactions = serverData.reverse();
+
+            localStorage.setItem(
+                'pos_transactions',
+                JSON.stringify(AppState.transactions)
+            );
+
+            renderDashboard();
+
+            renderArchive();
+
+            updateChart();
+
+            showToast('تم تحديث البيانات', 'success');
+        }
+
+    }catch(error){
+
+        console.log("Sync Error");
+
+    }
+}
+
+// تحديث كل 5 ثواني
+setInterval(fetchLatestTransactions,5000);
+
+        // --- 5. Export to Text Invoice ---
+        async function copyInvoice() {
+            const today = new Date().toLocaleDateString('en-CA');
+            const todayTransactions = AppState.transactions.filter(t => t.date === today);
+            
+            if(todayTransactions.length === 0) {
+                showToast('لا توجد مبيعات اليوم لنسخها', 'error'); return;
+            }
+            
+            let total = 0;
+            let text = `🌸 فاتورة زهرة الإيمان 🌸\n`;
+            text += `الكاشير: ${AppState.username}\n`;
+            text += `التاريخ: ${new Date().toLocaleDateString('ar-EG')}\n`;
+            text += `------------------------\n`;
+            
+            todayTransactions.forEach((t, i) => {
+                text += `${i+1}. ${t.name} | ${t.qty}x \n   بـ ${t.total} ج.م\n`;
+                total += t.total;
+            });
+            
+            text += `------------------------\n`;
+            text += `الإجمالي: ${total} ج.م\n`;
+            text += `شكراً لزيارتكم!`;
+            
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast('تم نسخ الفاتورة النصية بنجاح!', 'success');
+            } catch(e) {
+                // Fallback for older browsers
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand("copy");
+                textArea.remove();
+                showToast('تم نسخ الفاتورة النصية بنجاح!', 'success');
+            }
+        }
+
+        // --- 6. Rendering ---
+        function renderDashboard() {
+            const today = new Date().toLocaleDateString('en-CA');
+            const todayTransactions = AppState.transactions.filter(t => t.date === today);
+            
+            const totalSales = todayTransactions.reduce((sum, t) => sum + t.total, 0);
+            const totalItems = todayTransactions.reduce((sum, t) => sum + t.qty, 0);
+            
+            animateValue("today-total-sales", 0, totalSales, 500);
+            document.getElementById('today-total-items').textContent = totalItems;
+
+            // Target Logic
+            let percent = Math.min(100, Math.round((totalSales / AppState.dailyTarget) * 100));
+            document.getElementById('target-bar').style.width = `${percent}%`;
+            document.getElementById('target-percent').textContent = `${percent}%`;
+            if(percent >= 100) document.getElementById('target-bar').classList.add('bg-yellow-400');
+            else document.getElementById('target-bar').classList.remove('bg-yellow-400');
+
+            const listEl = document.getElementById('recent-transactions-list');
+            listEl.innerHTML = '';
+            
+            if (todayTransactions.length === 0) {
+                listEl.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm glass-card border-dashed">لم تقم بأي مبيعات اليوم حتى الآن.</div>`;
+                return;
+            }
+
+            todayTransactions.slice(0, 5).forEach(t => listEl.innerHTML += createTransactionCard(t));
+        }
+
+        function renderArchive(filterText = '') {
+            const listEl = document.getElementById('archive-list');
+            listEl.innerHTML = '';
+            
+            let filtered = AppState.transactions;
+            if (filterText) {
+                filtered = filtered.filter(t => t.name.includes(filterText) || t.category.includes(filterText));
+            }
+
+            const grouped = filtered.reduce((acc, obj) => {
+                const key = obj.date;
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(obj);
+                return acc;
+            }, {});
+
+            if(Object.keys(grouped).length === 0) {
+                listEl.innerHTML = `<div class="text-center py-10 text-slate-400 font-medium">لا توجد سجلات.</div>`;
+                return;
+            }
+
+            for (const date in grouped) {
+                const dayTotal = grouped[date].reduce((sum, t) => sum + t.total, 0);
+                let html = `
+                <div class="mb-5">
+                    <div class="flex justify-between items-center mb-3 px-2 border-b border-slate-200 dark:border-slate-700 pb-2">
+                        <span class="font-bold text-slate-600 dark:text-slate-300 text-sm"><i class="fa-regular fa-calendar ml-2 text-emerald-500"></i>${date === new Date().toLocaleDateString('en-CA') ? 'مبيعات اليوم' : date}</span>
+                        <span class="font-black text-slate-800 dark:text-white">${dayTotal} ج</span>
+                    </div>
+                    <div class="space-y-2">
+                `;
+                grouped[date].forEach(t => html += createTransactionCard(t));
+                html += `</div></div>`;
+                listEl.innerHTML += html;
+            }
+        }
+
+        function createTransactionCard(t) {
+            const icon = CATEGORY_ICONS[t.category] || CATEGORY_ICONS['أخرى'];
+            return `
+            <div class="glass-card p-3 flex justify-between items-center bg-white dark:bg-slate-800 hover:scale-[1.02] transition-transform shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 text-emerald-500 flex items-center justify-center text-lg">
+                        <i class="fa-solid ${icon}"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm text-slate-800 dark:text-white">${t.name}</h4>
+                        <div class="flex text-[10px] text-slate-500 gap-2 mt-1 font-medium">
+                            <span>${t.category}</span>
+                            <span>•</span>
+                            <span>${t.time}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-left">
+                    <p class="font-black text-emerald-600 dark:text-emerald-400">${t.total} <span class="text-[10px] font-normal">ج</span></p>
+                    <p class="text-[10px] text-slate-400">${t.qty}x ${t.price}</p>
+                </div>
+            </div>`;
+        }
+
+        function filterArchive() { renderArchive(document.getElementById('search-input').value); }
+
+        // --- 7. Charts ---
+        function initChart() {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
+                    datasets: [{
+                        label: 'المبيعات',
+                        data: [0,0,0,0,0,0,0],
+                        backgroundColor: '#10b981',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: {family:'Tajawal'} } },
+                        y: { border: {dash: [4, 4]} }
+                    }
+                }
+            });
+        }
+
+        function updateChart() {
+            const catStats = {};
+            AppState.transactions.forEach(t => {
+                if(!catStats[t.category]) catStats[t.category] = { total: 0 };
+                catStats[t.category].total += t.total;
+            });
+            
+            const listEl = document.getElementById('best-categories');
+            listEl.innerHTML = '';
+            
+            const sorted = Object.keys(catStats).sort((a,b) => catStats[b].total - catStats[a].total);
+            if(sorted.length === 0) listEl.innerHTML = '<p class="text-sm text-slate-400">لا توجد بيانات للتحليل.</p>';
+
+            const maxVal = sorted.length > 0 ? catStats[sorted[0]].total : 1;
+
+            sorted.forEach(cat => {
+                const s = catStats[cat];
+                const width = (s.total / maxVal) * 100;
+                listEl.innerHTML += `
+                    <div>
+                        <div class="flex justify-between text-sm mb-1.5 font-medium">
+                            <span class="text-slate-700 dark:text-slate-300">${cat}</span>
+                            <span class="font-bold text-emerald-600 dark:text-emerald-400">${s.total} ج</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full" style="width: ${width}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // --- 8. Sync & Helper ---
+        function setupNetworkListeners() {
+            window.addEventListener('online', () => {
+                document.getElementById('sync-status').classList.replace('bg-red-500', 'bg-emerald-500');
+                showToast('عاد الإنترنت، تمت المزامنة السحابية', 'success');
+            });
+            window.addEventListener('offline', () => {
+                document.getElementById('sync-status').classList.replace('bg-emerald-500', 'bg-red-500');
+                showToast('أنت الآن تعمل بدون إنترنت (Offline)', 'error');
+            });
+            if(!navigator.onLine) document.getElementById('sync-status').classList.replace('bg-emerald-500', 'bg-red-500');
+        }
+
+        function forceSync() {
+            if(!navigator.onLine) { showToast('لا يوجد اتصال بالإنترنت', 'error'); return; }
+            showToast('تمت المزامنة بنجاح ☁️', 'success');
+            AppState.offlineQueue = [];
+            localStorage.setItem('pos_queue', JSON.stringify([]));
+        }
+
+        function animateValue(id, start, end, duration) {
+            let obj = document.getElementById(id);
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start) + ' <span class="text-xl text-slate-400">ج.م</span>';
+                if (progress < 1) window.requestAnimationFrame(step);
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        function clearData() {
+            if(confirm('هل أنت متأكد من مسح جميع السجلات بشكل نهائي؟ لا يمكن التراجع عن هذا الإجراء.')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        window.onload = initApp;
+
+        // PWA SW
+        if ('serviceWorker' in navigator) {
+            const swCode = `self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(()=>new Response('Offline'))));`;
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            navigator.serviceWorker.register(URL.createObjectURL(blob));
+        }
+    </script>
+</body>
+</html>
