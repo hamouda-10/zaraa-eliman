@@ -120,7 +120,6 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* تم إصلاح خطأ الـ mt4; هنا */
         #toast-container { position: fixed; top: var(--safe-top); left: 50%; transform: translateX(-50%); z-index: 200; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; margin-top: 1rem; }
         .toast { pointer-events: auto; padding: 14px 20px; border-radius: 14px; display: flex; align-items: center; gap: 12px; animation: fadeInDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .dark .toast { background: rgba(15,23,42,0.95); border: 1px solid rgba(255,255,255,0.1); color: white; }
@@ -138,6 +137,14 @@
         @keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
         .category-chip.active { background: #10b981; color: white; border-color: #10b981; }
+
+        /* حل سحري لضمان عمل أزرار البار السفلي بدقة 100% */
+        .nav-btn { cursor: pointer; position: relative; z-index: 10; -webkit-tap-highlight-color: transparent; }
+     .nav-btn i,
+.nav-btn span{
+    pointer-events:auto !important;
+}
+
     </style>
 </head>
 <body class="h-screen w-full flex justify-center bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 relative">
@@ -211,14 +218,14 @@
                     
                     <div class="grid grid-cols-2 gap-4 border-t border-slate-200 dark:border-slate-700/50 pt-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-box-open text-sm"></i></div>
+                            <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-box-open text-sm pointer-events-none"></i></div>
                             <div>
                                 <p class="text-slate-500 dark:text-slate-400 text-[10px] font-bold">القطع المباعة</p>
                                 <p class="font-black text-slate-800 dark:text-white text-lg" id="today-total-items">0</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-teal-100 dark:bg-teal-500/20 flex items-center justify-center text-teal-600 dark:text-teal-400"><i class="fa-solid fa-receipt text-sm"></i></div>
+                            <div class="w-10 h-10 rounded-full bg-teal-100 dark:bg-teal-500/20 flex items-center justify-center text-teal-600 dark:text-teal-400"><i class="fa-solid fa-receipt text-sm pointer-events-none"></i></div>
                             <div>
                                 <p class="text-slate-500 dark:text-slate-400 text-[10px] font-bold">عدد الفواتير</p>
                                 <p class="font-black text-slate-800 dark:text-white text-lg" id="today-transactions-count">0</p>
@@ -230,12 +237,12 @@
                 <!-- Quick Actions Grid -->
                 <div class="grid grid-cols-2 gap-3">
                     <button onclick="copyInvoice()" class="glass-card flex items-center justify-center p-3.5 gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 shadow-sm text-slate-700 dark:text-slate-200">
-                        <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-500 flex items-center justify-center"><i class="fa-solid fa-copy"></i></div>
-                        <span class="text-xs font-bold">نسخ فواتير اليوم</span>
+                        <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-500 flex items-center justify-center"><i class="fa-solid fa-copy pointer-events-none"></i></div>
+                        <span class="text-xs font-bold pointer-events-none">نسخ فواتير اليوم</span>
                     </button>
                     <button onclick="openMonthCopyModal()" class="glass-card flex items-center justify-center p-3.5 gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 shadow-sm text-slate-700 dark:text-slate-200">
-                        <div class="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-500 flex items-center justify-center"><i class="fa-solid fa-calendar-days"></i></div>
-                        <span class="text-xs font-bold">فاتورة الشهر</span>
+                        <div class="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-500 flex items-center justify-center"><i class="fa-solid fa-calendar-days pointer-events-none"></i></div>
+                        <span class="text-xs font-bold pointer-events-none">فاتورة الشهر</span>
                     </button>
                 </div>
 
@@ -243,7 +250,7 @@
                 <div>
                     <div class="flex justify-between items-end mb-4 px-1">
                         <h3 class="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-emerald-500"></i> أحدث المبيعات</h3>
-                        <button onclick="switchView('view-archive', document.getElementById('nav-archive'))" class="text-emerald-500 text-xs font-bold hover:underline">عرض الكل</button>
+                        <button onclick="switchView('view-archive', 'nav-archive')" class="text-emerald-500 text-xs font-bold hover:underline">عرض الكل</button>
                     </div>
                     <div id="recent-transactions-list" class="space-y-3 min-h-[200px]">
                         <!-- Skeletons load here -->
@@ -317,69 +324,89 @@
                             <p class="text-xs text-slate-500 dark:text-slate-400 mb-1 font-bold">الكاشير النشط حالياً</p>
                             <h3 class="font-black text-xl text-slate-800 dark:text-white" id="settings-username">---</h3>
                         </div>
-                        <button onclick="editUsername()" class="mr-auto w-10 h-10 rounded-full glass-input flex items-center justify-center text-slate-500 hover:text-emerald-500 transition shadow-sm"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="editUsername()" class="mr-auto w-10 h-10 rounded-full glass-input flex items-center justify-center text-slate-500 hover:text-emerald-500 transition shadow-sm"><i class="fa-solid fa-pen pointer-events-none"></i></button>
                     </div>
 
                     <!-- Logout / Clear Local Cache -->
                     <button class="w-full flex justify-between items-center text-red-500 glass-input p-4 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition active:scale-95" onclick="clearLocalData()">
-                        <div class="flex items-center gap-3"><i class="fa-solid fa-right-from-bracket w-5 text-lg"></i><span class="font-bold text-lg">تسجيل الخروج</span></div>
-                        <i class="fa-solid fa-chevron-left text-xs opacity-50"></i>
+                        <div class="flex items-center gap-3"><i class="fa-solid fa-right-from-bracket w-5 text-lg pointer-events-none"></i><span class="font-bold text-lg pointer-events-none">تسجيل الخروج</span></div>
+                        <i class="fa-solid fa-chevron-left text-xs opacity-50 pointer-events-none"></i>
                     </button>
                     <p class="text-[10px] text-center text-slate-400 font-medium">تسجيل الخروج يمسح الجلسة المحلية فقط ولا يؤثر على قاعدة البيانات.</p>
                 </div>
 
                 <!-- Developer Info Section -->
-<div class="glass-card p-6 bg-white dark:bg-slate-800/80 text-center mt-6 border-emerald-500/20 shadow-md">
-    
-    <h3 class="text-lg font-bold mb-4 text-slate-800 dark:text-white border-b border-slate-200 dark:border-slate-700 pb-2 inline-block">
-        برمجة وتصميم
-    </h3>
-
-    <div class="block group mt-2">
-
-        <!-- مكان الصورة -->
-        <div class="w-40 h-40 mx-auto rounded-3xl overflow-hidden shadow-[0_10px_30px_rgba(16,185,129,0.3)] mb-4 border-4 border-emerald-500/20 relative">
-
-            <img 
-                src="https://g.top4top.io/p_3795bgqfb1.jpeg" 
-                class="w-full h-full object-cover"
-                alt="م / عبدالرحمن حمودة"
-                id="dev-image"
-            >
-
-        </div>
-
-        <p class="font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-400 text-2xl">
-            م / عبدالرحمن حمودة
-        </p>
-
-    </div>
-
-</div>
+                <div class="glass-card p-6 bg-white dark:bg-slate-800/80 text-center mt-6 border-emerald-500/20 shadow-md">
+                    <h3 class="text-lg font-bold mb-4 text-slate-800 dark:text-white border-b border-slate-200 dark:border-slate-700 pb-2 inline-block">
+                        برمجة وتصميم
+                    </h3>
+                    <div class="block group mt-2">
+                        <!-- مكان الصورة -->
+                        <div class="w-40 h-40 mx-auto rounded-3xl overflow-hidden shadow-[0_10px_30px_rgba(16,185,129,0.3)] mb-4 border-4 border-emerald-500/20 relative">
+                            <img src="https://g.top4top.io/p_3795bgqfb1.jpeg" class="w-full h-full object-cover" alt="م / عبدالرحمن حمودة" id="dev-image">
+                        </div>
+                        <p class="font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-400 text-2xl">
+                            م / عبدالرحمن حمودة
+                        </p>
+                    </div>
+                </div>
             </section>
 
         </main>
 
-        <!-- Bottom Navigation -->
+        <!-- Bottom Navigation - FIXED HIT AREA & EVENT CATCHING -->
         <nav class="fixed bottom-0 w-full max-w-md glass-card rounded-b-none rounded-t-3xl bg-white/95 dark:bg-slate-900/95 z-30 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] border-b-0 border-x-0 border-t border-slate-200 dark:border-slate-700/50 nav-safe-padding backdrop-blur-xl">
             <div class="relative flex justify-around items-center h-16 px-2 mt-1">
-                <button id="nav-dashboard" onclick="switchView('view-dashboard', this)" class="nav-btn active flex flex-col items-center gap-1 text-emerald-500 w-14 transition-colors">
-                    <i class="fa-solid fa-house text-[20px] mb-0.5"></i><span class="text-[10px] font-bold">الرئيسية</span>
+                
+                <button 
+    id="nav-dashboard"
+    type="button"
+    onclick="switchView('view-dashboard','nav-dashboard')"
+
+    class="nav-btn active relative flex flex-col justify-center items-center gap-1
+    text-emerald-500 w-16 h-full transition-colors
+    touch-manipulation select-none"
+
+    style="
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    "
+>
+
+    <!-- طبقة لمس كاملة -->
+    <span class="absolute inset-0 z-10"></span>
+
+    <!-- الايقونة -->
+    <i class="fa-solid fa-house text-[20px] mb-0.5 relative z-20"></i>
+
+    <!-- النص -->
+    <span class="text-[10px] font-bold relative z-20">
+        الرئيسية
+    </span>
+
+</button>
+                
+                <button id="nav-archive" onclick="switchView('view-archive', 'nav-archive')" class="nav-btn flex flex-col justify-center items-center gap-1 text-slate-400 hover:text-emerald-500 w-16 h-full transition-colors">
+                    <i class="fa-solid fa-list-check text-[20px] mb-0.5"></i>
+                    <span class="text-[10px] font-bold">السجل</span>
                 </button>
-                <button id="nav-archive" onclick="switchView('view-archive', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-500 w-14 transition-colors">
-                    <i class="fa-solid fa-list-check text-[20px] mb-0.5"></i><span class="text-[10px] font-bold">السجل</span>
-                </button>
+                
                 <div class="w-16 flex justify-center relative">
                     <button id="add-btn-main" onclick="openAddModal()" class="absolute -top-10 w-16 h-16 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-full shadow-[0_8px_25px_rgba(16,185,129,0.5)] flex items-center justify-center text-white text-3xl z-40 transition-transform transform hover:scale-105 active:scale-90 border-[5px] border-slate-50 dark:border-slate-950">
-                        <i class="fa-solid fa-plus"></i>
+                        <i class="fa-solid fa-plus pointer-events-none"></i>
                     </button>
                 </div>
-                <button id="nav-stats" onclick="switchView('view-stats', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-500 w-14 transition-colors">
-                    <i class="fa-solid fa-chart-pie text-[20px] mb-0.5"></i><span class="text-[10px] font-bold">تحليلات</span>
+                
+                <button id="nav-stats" onclick="switchView('view-stats', 'nav-stats')" class="nav-btn flex flex-col justify-center items-center gap-1 text-slate-400 hover:text-emerald-500 w-16 h-full transition-colors">
+                    <i class="fa-solid fa-chart-pie text-[20px] mb-0.5"></i>
+                    <span class="text-[10px] font-bold">تحليلات</span>
                 </button>
-                <button id="nav-settings" onclick="switchView('view-settings', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-500 w-14 transition-colors">
-                    <i class="fa-solid fa-gear text-[20px] mb-0.5"></i><span class="text-[10px] font-bold">إعدادات</span>
+                
+                <button id="nav-settings" onclick="switchView('view-settings', 'nav-settings')" class="nav-btn flex flex-col justify-center items-center gap-1 text-slate-400 hover:text-emerald-500 w-16 h-full transition-colors">
+                    <i class="fa-solid fa-gear text-[20px] mb-0.5"></i>
+                    <span class="text-[10px] font-bold">إعدادات</span>
                 </button>
+                
             </div>
         </nav>
 
@@ -428,7 +455,7 @@
                         <h3 class="text-4xl font-black text-slate-800 dark:text-white"><span id="add-total-display">0</span> <span class="text-sm font-bold text-slate-500">ج.م</span></h3>
                     </div>
                     <button id="submit-btn" type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-lg py-4 rounded-2xl shadow-[0_8px_20px_rgba(16,185,129,0.3)] mt-6 active:scale-[0.98] transition-transform flex justify-center items-center gap-2">
-                        <span>حفظ في السجل</span> <i class="fa-solid fa-check-circle"></i>
+                        <span>حفظ في السجل</span> <i class="fa-solid fa-check-circle pointer-events-none"></i>
                     </button>
                 </form>
             </div>
@@ -479,7 +506,7 @@
                         <h3 class="text-4xl font-black text-slate-800 dark:text-white"><span id="edit-total-display">0</span> <span class="text-sm font-bold text-slate-500">ج.م</span></h3>
                     </div>
                     <button id="edit-submit-btn" type="submit" class="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-black text-lg py-4 rounded-2xl shadow-[0_8px_20px_rgba(59,130,246,0.3)] mt-6 active:scale-[0.98] transition-transform flex justify-center items-center gap-2">
-                        <span>حفظ التعديلات</span> <i class="fa-solid fa-floppy-disk"></i>
+                        <span>حفظ التعديلات</span> <i class="fa-solid fa-floppy-disk pointer-events-none"></i>
                     </button>
                 </form>
             </div>
@@ -505,7 +532,7 @@
                     </div>
                     
                     <button onclick="copyMonthInvoice()" class="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-black text-lg py-4 rounded-2xl shadow-[0_8px_20px_rgba(168,85,247,0.3)] mt-2 active:scale-[0.98] transition-transform flex justify-center items-center gap-2">
-                        <span>نسخ الفاتورة المجمعة</span> <i class="fa-solid fa-copy"></i>
+                        <span>نسخ الفاتورة المجمعة</span> <i class="fa-solid fa-copy pointer-events-none"></i>
                     </button>
                 </div>
             </div>
@@ -883,8 +910,8 @@
                         <span class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> ${t.time}</span>
                     </div>
                     <div class="flex gap-3">
-                        <button onclick="window.openEditModal('${t.firebaseId}')" class="text-slate-400 hover:text-blue-500 transition p-1" aria-label="تعديل"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="window.confirmDelete('${t.firebaseId}')" class="text-slate-400 hover:text-red-500 transition p-1" aria-label="حذف"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="window.openEditModal('${t.firebaseId}')" class="text-slate-400 hover:text-blue-500 transition p-1" aria-label="تعديل"><i class="fa-solid fa-pen pointer-events-none"></i></button>
+                        <button onclick="window.confirmDelete('${t.firebaseId}')" class="text-slate-400 hover:text-red-500 transition p-1" aria-label="حذف"><i class="fa-solid fa-trash pointer-events-none"></i></button>
                     </div>
                 </div>
             </div>`;
@@ -1028,32 +1055,27 @@
             btn.innerHTML = html;
         }
 
-        // تم إصلاح التنقل وتفعيله بكفاءة عالية وبدون الاعتماد على event
-        window.switchView = function(viewId, btnEl) {
+        // تم التعديل بشكل جذري لضمان الاعتماد على ID الزر دائماً وتفادي أي أخطاء من ضغطات الأطفال (Child Nodes)
+        window.switchView = function(viewId, targetBtnId) {
             document.querySelectorAll('.view-section').forEach(el => {
                 el.style.display = 'none';
                 el.classList.remove('active');
             });
             const activeEl = document.getElementById(viewId);
             activeEl.style.display = 'block';
-            setTimeout(() => activeEl.classList.add('active'), 0); // للـ 0.1 مللي ثانية
+            void activeEl.offsetWidth; // إجبار المتصفح على رسم العنصر فورا
+            activeEl.classList.add('active');
             
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('text-emerald-500', 'active');
                 btn.classList.add('text-slate-400');
             });
             
-            if (btnEl) {
-                btnEl.classList.remove('text-slate-400');
-                btnEl.classList.add('text-emerald-500', 'active');
-            } else {
-                // إذا لم يتم تمرير الزر (مثل ضغط زر الرجوع أو غيره)
-                const targetBtnId = 'nav-' + viewId.replace('view-', '');
-                const targetBtn = document.getElementById(targetBtnId);
-                if (targetBtn) {
-                    targetBtn.classList.remove('text-slate-400');
-                    targetBtn.classList.add('text-emerald-500', 'active');
-                }
+            const btnIdToActive = targetBtnId || 'nav-' + viewId.replace('view-', '');
+            const targetBtn = document.getElementById(btnIdToActive);
+            if (targetBtn) {
+                targetBtn.classList.remove('text-slate-400');
+                targetBtn.classList.add('text-emerald-500', 'active');
             }
             
             if(viewId === 'view-archive') renderCategoryChips();
@@ -1079,7 +1101,6 @@
             } 
         };
 
-        // إدارة الصور
         window.previewImage = function(event, previewId, type) {
             const file = event.target.files[0];
             if (file) {
@@ -1245,7 +1266,6 @@
             if (theme === 'dark') { document.documentElement.classList.add('dark'); document.getElementById('theme-icon').className = 'fa-solid fa-sun text-yellow-400'; }
             else { document.documentElement.classList.remove('dark'); document.getElementById('theme-icon').className = 'fa-solid fa-moon text-slate-600'; }
 
-            // تحديد الصورة الافتراضية
             const defaultImageUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(window.AppState.username || 'User') + '&background=10b981&color=fff&size=128';
             if (!window.AppState.userImage) {
                 window.AppState.userImage = defaultImageUrl;
@@ -1257,7 +1277,6 @@
                 document.getElementById('header-user').innerHTML = `مرحباً بك، <span class="font-bold text-slate-800 dark:text-white">${sanitizeInput(window.AppState.username)}</span>`;
                 document.getElementById('settings-username').textContent = sanitizeInput(window.AppState.username);
                 
-                // تحديث صورة الكاشير في الإعدادات
                 const settingsPreview = document.getElementById('settings-preview');
                 if(settingsPreview) {
                     settingsPreview.src = window.AppState.userImage;
