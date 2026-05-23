@@ -29,7 +29,6 @@
                     },
                     animation: {
                         'spring-up': 'springUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
-                        'fade-in': 'fadeIn 0.4s ease forwards',
                         'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     },
                     keyframes: {
@@ -60,7 +59,6 @@
             scroll-behavior: smooth;
         }
 
-        /* Prevent auto-zoom on iOS inputs */
         input, select, textarea {
             font-size: 16px !important;
         }
@@ -100,31 +98,30 @@
         }
         .glass-input:focus { border-color: #10b981; outline: none; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
 
-        .view-section { display: none; opacity: 0; transform: translateY(10px); transition: opacity 0.4s ease, transform 0.4s ease; }
-        .view-section.active { display: block; opacity: 1; transform: translateY(0); animation: fadeIn 0.4s ease forwards; }
-        
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* جعل التنقل فوري 0.1 مللي ثانية */
+        .view-section { display: none; opacity: 0; }
+        .view-section.active { display: block; opacity: 1; transition: opacity 0.0001s ease; }
         
         .modal-overlay {
             display: none; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
-            position: fixed; inset: 0; z-index: 100; transition: opacity 0.3s ease;
+            position: fixed; inset: 0; z-index: 100; transition: opacity 0.1s ease;
         }
-        .modal-overlay.active { display: flex; animation: fadeOverlay 0.3s forwards; }
-        @keyframes fadeOverlay { from { opacity: 0; } to { opacity: 1; } }
+        .modal-overlay.active { display: flex; opacity: 1; }
         
         .bottom-modal-content {
             position: absolute; bottom: -100%; left: 0; right: 0;
             border-radius: 2rem 2rem 0 0;
-            padding: 1.5rem; transition: bottom 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            padding: 1.5rem; transition: bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             max-height: 90vh;
         }
         .modal-overlay.active .bottom-modal-content { bottom: 0; }
-        .modal-overlay.active .centered-modal { animation: springUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .modal-overlay.active .centered-modal { animation: springUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        #toast-container { position: fixed; top: var(--safe-top); left: 50%; transform: translateX(-50%); z-index: 200; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; mt-4; }
+        /* تم إصلاح خطأ الـ mt4; هنا */
+        #toast-container { position: fixed; top: var(--safe-top); left: 50%; transform: translateX(-50%); z-index: 200; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; margin-top: 1rem; }
         .toast { pointer-events: auto; padding: 14px 20px; border-radius: 14px; display: flex; align-items: center; gap: 12px; animation: fadeInDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .dark .toast { background: rgba(15,23,42,0.95); border: 1px solid rgba(255,255,255,0.1); color: white; }
         html:not(.dark) .toast { background: white; border: 1px solid rgba(0,0,0,0.1); color: #1e293b; }
@@ -151,12 +148,20 @@
     <!-- Onboarding Modal -->
     <div id="onboarding-modal" class="modal-overlay items-center justify-center bg-white dark:bg-slate-900 !backdrop-blur-xl z-[150]">
         <div class="w-[90%] max-w-sm glass-card p-8 text-center bg-white dark:bg-slate-800 border dark:border-slate-700 centered-modal">
-            <div class="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 shadow-lg shadow-emerald-500/20">
-                <i class="fa-solid fa-leaf"></i>
+            
+            <!-- صورة الكاشير عند التسجيل الأول -->
+            <div class="relative w-28 h-28 mx-auto mb-4 group cursor-pointer" onclick="document.getElementById('onboarding-image-input').click()">
+                <img id="onboarding-preview" src="https://ui-avatars.com/api/?name=User&background=10b981&color=fff&size=128" class="w-full h-full rounded-full object-cover border-4 border-emerald-500 shadow-lg" alt="Profile">
+                <div class="absolute inset-0 bg-black/60 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                    <i class="fa-solid fa-camera text-white mb-1"></i>
+                    <span class="text-white text-[10px] font-bold">أضف صورة</span>
+                </div>
+                <input type="file" id="onboarding-image-input" class="hidden" accept="image/*" onchange="previewImage(event, 'onboarding-preview', 'temp')">
             </div>
-            <h2 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-500 mb-2">زهرة الإيمان</h2>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">أهلاً بك! يرجى إدخال اسم المستخدم للبدء في النظام.</p>
-            <input type="text" id="username-input" class="glass-input w-full p-4 text-center font-bold mb-4 text-lg" placeholder="اسم الكاشير أو المدير..." autocomplete="name">
+
+            <h2 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-500 mb-2">💚ستور زهرة الإيمان💚</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">أهلاً بك! يرجى إدخال اسمك وإضافة صورتك للبدء في النظام.</p>
+            <input type="text" id="username-input" class="glass-input w-full p-4 text-center font-bold mb-4 text-lg" placeholder="إسم الكاشير" autocomplete="name">
             <button onclick="saveUsername()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-500/30 active:scale-95 transition text-lg">دخول النظام</button>
         </div>
     </div>
@@ -180,7 +185,6 @@
                         <i id="theme-icon" class="fa-solid fa-moon"></i>
                     </button>
                 </div>
-                <!-- Enhanced Sync Status -->
                 <div class="glass-card flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/40 dark:bg-slate-800/40">
                     <div class="relative flex h-2.5 w-2.5 items-center justify-center">
                         <span id="sync-ping" class="absolute inline-flex h-full w-full rounded-full opacity-0"></span>
@@ -239,7 +243,7 @@
                 <div>
                     <div class="flex justify-between items-end mb-4 px-1">
                         <h3 class="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-emerald-500"></i> أحدث المبيعات</h3>
-                        <button onclick="switchView('view-archive')" class="text-emerald-500 text-xs font-bold hover:underline">عرض الكل</button>
+                        <button onclick="switchView('view-archive', document.getElementById('nav-archive'))" class="text-emerald-500 text-xs font-bold hover:underline">عرض الكل</button>
                     </div>
                     <div id="recent-transactions-list" class="space-y-3 min-h-[200px]">
                         <!-- Skeletons load here -->
@@ -271,7 +275,6 @@
             <section id="view-stats" class="view-section space-y-6">
                 <h2 class="text-2xl font-bold mb-4">التحليلات والإحصائيات</h2>
                 
-                <!-- Today's Stats Details -->
                 <div class="glass-card p-5 bg-white dark:bg-slate-800/80 grid grid-cols-2 gap-4 divide-x divide-x-reverse divide-slate-100 dark:divide-slate-700">
                     <div class="text-center">
                         <p class="text-xs text-slate-500 mb-1 font-bold">القسم الأكثر مبيعاً اليوم</p>
@@ -298,25 +301,61 @@
             <!-- Settings View -->
             <section id="view-settings" class="view-section space-y-4">
                 <h2 class="text-2xl font-bold mb-4">إعدادات الحساب</h2>
+                
+                <!-- Cashier Info -->
                 <div class="glass-card p-5 space-y-6 bg-white dark:bg-slate-800/80">
                     <div class="flex items-center gap-4 border-b border-slate-200 dark:border-slate-700 pb-5">
-                        <div class="w-14 h-14 bg-gradient-to-br from-emerald-400 to-teal-500 text-white rounded-full flex items-center justify-center text-2xl font-bold shadow-lg shadow-emerald-500/30">
-                            <i class="fa-solid fa-user-tie"></i>
+                        <div class="relative w-16 h-16 cursor-pointer group" onclick="document.getElementById('settings-image-input').click()" title="تغيير الصورة">
+                            <img id="settings-preview" src="" class="w-full h-full rounded-full object-cover border-2 border-emerald-500 shadow-lg" alt="Cashier">
+                            <div class="absolute inset-0 bg-black/60 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                                <i class="fa-solid fa-camera text-white text-[12px] mb-1"></i>
+                                <span class="text-white text-[9px] font-bold">تغيير</span>
+                            </div>
+                            <input type="file" id="settings-image-input" class="hidden" accept="image/*" onchange="updateProfileImage(event)">
                         </div>
                         <div>
                             <p class="text-xs text-slate-500 dark:text-slate-400 mb-1 font-bold">الكاشير النشط حالياً</p>
                             <h3 class="font-black text-xl text-slate-800 dark:text-white" id="settings-username">---</h3>
                         </div>
-                        <button onclick="editUsername()" class="mr-auto w-10 h-10 rounded-full glass-input flex items-center justify-center text-slate-500 hover:text-emerald-500 transition"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="editUsername()" class="mr-auto w-10 h-10 rounded-full glass-input flex items-center justify-center text-slate-500 hover:text-emerald-500 transition shadow-sm"><i class="fa-solid fa-pen"></i></button>
                     </div>
 
                     <!-- Logout / Clear Local Cache -->
                     <button class="w-full flex justify-between items-center text-red-500 glass-input p-4 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition active:scale-95" onclick="clearLocalData()">
-                        <div class="flex items-center gap-3"><i class="fa-solid fa-right-from-bracket w-5 text-lg"></i><span class="font-bold text-lg">تسجيل</span></div>
+                        <div class="flex items-center gap-3"><i class="fa-solid fa-right-from-bracket w-5 text-lg"></i><span class="font-bold text-lg">تسجيل الخروج</span></div>
                         <i class="fa-solid fa-chevron-left text-xs opacity-50"></i>
                     </button>
                     <p class="text-[10px] text-center text-slate-400 font-medium">تسجيل الخروج يمسح الجلسة المحلية فقط ولا يؤثر على قاعدة البيانات.</p>
                 </div>
+
+                <!-- Developer Info Section -->
+<div class="glass-card p-6 bg-white dark:bg-slate-800/80 text-center mt-6 border-emerald-500/20 shadow-md">
+    
+    <h3 class="text-lg font-bold mb-4 text-slate-800 dark:text-white border-b border-slate-200 dark:border-slate-700 pb-2 inline-block">
+        برمجة وتصميم
+    </h3>
+
+    <div class="block group mt-2">
+
+        <!-- مكان الصورة -->
+        <div class="w-40 h-40 mx-auto rounded-3xl overflow-hidden shadow-[0_10px_30px_rgba(16,185,129,0.3)] mb-4 border-4 border-emerald-500/20 relative">
+
+            <img 
+                src="https://g.top4top.io/p_3795bgqfb1.jpeg" 
+                class="w-full h-full object-cover"
+                alt="م / عبدالرحمن حمودة"
+                id="dev-image"
+            >
+
+        </div>
+
+        <p class="font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-400 text-2xl">
+            م / عبدالرحمن حمودة
+        </p>
+
+    </div>
+
+</div>
             </section>
 
         </main>
@@ -324,10 +363,10 @@
         <!-- Bottom Navigation -->
         <nav class="fixed bottom-0 w-full max-w-md glass-card rounded-b-none rounded-t-3xl bg-white/95 dark:bg-slate-900/95 z-30 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] border-b-0 border-x-0 border-t border-slate-200 dark:border-slate-700/50 nav-safe-padding backdrop-blur-xl">
             <div class="relative flex justify-around items-center h-16 px-2 mt-1">
-                <button onclick="switchView('view-dashboard')" class="nav-btn active flex flex-col items-center gap-1 text-emerald-500 w-14 transition-colors">
+                <button id="nav-dashboard" onclick="switchView('view-dashboard', this)" class="nav-btn active flex flex-col items-center gap-1 text-emerald-500 w-14 transition-colors">
                     <i class="fa-solid fa-house text-[20px] mb-0.5"></i><span class="text-[10px] font-bold">الرئيسية</span>
                 </button>
-                <button onclick="switchView('view-archive')" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-500 w-14 transition-colors">
+                <button id="nav-archive" onclick="switchView('view-archive', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-500 w-14 transition-colors">
                     <i class="fa-solid fa-list-check text-[20px] mb-0.5"></i><span class="text-[10px] font-bold">السجل</span>
                 </button>
                 <div class="w-16 flex justify-center relative">
@@ -335,10 +374,10 @@
                         <i class="fa-solid fa-plus"></i>
                     </button>
                 </div>
-                <button onclick="switchView('view-stats')" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-500 w-14 transition-colors">
+                <button id="nav-stats" onclick="switchView('view-stats', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-500 w-14 transition-colors">
                     <i class="fa-solid fa-chart-pie text-[20px] mb-0.5"></i><span class="text-[10px] font-bold">تحليلات</span>
                 </button>
-                <button onclick="switchView('view-settings')" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-500 w-14 transition-colors">
+                <button id="nav-settings" onclick="switchView('view-settings', this)" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-500 w-14 transition-colors">
                     <i class="fa-solid fa-gear text-[20px] mb-0.5"></i><span class="text-[10px] font-bold">إعدادات</span>
                 </button>
             </div>
@@ -497,7 +536,6 @@
             enableIndexedDbPersistence, deleteDoc, doc, updateDoc 
         } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCD9vVvHR_LiogzddMTjBalvMd11yI17bQ",
             authDomain: "zaraa-pos.firebaseapp.com",
@@ -510,15 +548,14 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Enable offline persistence
         enableIndexedDbPersistence(db).catch((err) => {
             console.error("Firebase persistence error:", err.code);
         });
 
-        // State Management
         window.AppState = {
             transactions: JSON.parse(localStorage.getItem('pos_transactions')) || [],
             username: localStorage.getItem('pos_username') || '',
+            userImage: localStorage.getItem('pos_user_image') || '',
             isLoading: true,
             activeCategory: 'الكل'
         };
@@ -532,8 +569,8 @@
         let myChart = null;
         let renderTimer = null;
         let deleteTargetId = null;
+        window.tempUserImage = '';
 
-        // Skeleton Generators
         function getSkeletonHTML() {
             return Array(4).fill(0).map(() => `
                 <div class="glass-card p-3 flex justify-between items-center opacity-70">
@@ -552,7 +589,6 @@
             `).join('');
         }
 
-        // Debounced Renderer
         function queueRender() {
             clearTimeout(renderTimer);
             renderTimer = setTimeout(() => {
@@ -562,7 +598,6 @@
             }, 50);
         }
 
-        // Sync Indicator Logic
         function setSyncIndicator(status) {
             const el = document.getElementById('sync-status');
             const ping = document.getElementById('sync-ping');
@@ -587,7 +622,6 @@
             }
         }
 
-        // REAL-TIME LISTENER
         const salesQuery = query(collection(db, "sales"), orderBy("timestamp", "desc"));
         
         onSnapshot(salesQuery, (snapshot) => {
@@ -718,7 +752,6 @@
             }
         });
 
-        // UI Rendering Logic
         function renderDashboard() {
             const listEl = document.getElementById('recent-transactions-list');
             if(window.AppState.isLoading) {
@@ -857,7 +890,6 @@
             </div>`;
         }
 
-        // Charts & Stats Logic
         function initChart() {
             const ctx = document.getElementById('salesChart').getContext('2d');
             Chart.defaults.color = document.documentElement.classList.contains('dark') ? '#94a3b8' : '#64748b';
@@ -882,18 +914,15 @@
             let todayCatStats = {};
 
             window.AppState.transactions.forEach(t => {
-                // All time categories
                 if(!catStats[t.category]) catStats[t.category] = { total: 0 };
                 catStats[t.category].total += t.total;
                 
-                // Today specific stats
                 if(t.date === today) {
                     if(!todayCatStats[t.category]) todayCatStats[t.category] = 0;
                     todayCatStats[t.category] += t.total;
                 }
             });
             
-            // Top category today
             let topCat = 'لا يوجد';
             let maxCatTotal = 0;
             for(const [cat, val] of Object.entries(todayCatStats)) {
@@ -901,13 +930,11 @@
             }
             document.getElementById('stat-top-cat').textContent = topCat;
 
-            // Avg order today
             const todayTxs = window.AppState.transactions.filter(t => t.date === today);
             const totalTodaySales = todayTxs.reduce((sum, t) => sum + t.total, 0);
             const avgOrder = todayTxs.length ? Math.round(totalTodaySales / todayTxs.length) : 0;
             document.getElementById('stat-avg-order').textContent = `${avgOrder} ج.م`;
 
-            // Categories visual bars
             const listEl = document.getElementById('best-categories');
             listEl.innerHTML = '';
             
@@ -931,7 +958,6 @@
                     </div>`;
             });
 
-            // 7 Days Chart Update
             if(myChart) {
                 const days = []; const totals = [];
                 for(let i=6; i>=0; i--) {
@@ -947,7 +973,6 @@
             }
         }
 
-        // Action Helpers
         window.openEditModal = function(id) {
             const t = window.AppState.transactions.find(tx => tx.firebaseId === id);
             if(!t) return;
@@ -968,7 +993,6 @@
         };
         
         window.openMonthCopyModal = function() {
-            // Set default value to current month
             const today = new Date();
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -1004,15 +1028,33 @@
             btn.innerHTML = html;
         }
 
-        window.switchView = function(viewId) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
+        // تم إصلاح التنقل وتفعيله بكفاءة عالية وبدون الاعتماد على event
+        window.switchView = function(viewId, btnEl) {
+            document.querySelectorAll('.view-section').forEach(el => {
+                el.style.display = 'none';
+                el.classList.remove('active');
+            });
+            const activeEl = document.getElementById(viewId);
+            activeEl.style.display = 'block';
+            setTimeout(() => activeEl.classList.add('active'), 0); // للـ 0.1 مللي ثانية
+            
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('text-emerald-500', 'active');
                 btn.classList.add('text-slate-400');
             });
-            event.currentTarget.classList.remove('text-slate-400');
-            event.currentTarget.classList.add('text-emerald-500', 'active');
+            
+            if (btnEl) {
+                btnEl.classList.remove('text-slate-400');
+                btnEl.classList.add('text-emerald-500', 'active');
+            } else {
+                // إذا لم يتم تمرير الزر (مثل ضغط زر الرجوع أو غيره)
+                const targetBtnId = 'nav-' + viewId.replace('view-', '');
+                const targetBtn = document.getElementById(targetBtnId);
+                if (targetBtn) {
+                    targetBtn.classList.remove('text-slate-400');
+                    targetBtn.classList.add('text-emerald-500', 'active');
+                }
+            }
             
             if(viewId === 'view-archive') renderCategoryChips();
             queueRender();
@@ -1031,15 +1073,46 @@
             if(newName && newName.trim()) { 
                 window.AppState.username = newName.trim(); 
                 localStorage.setItem('pos_username', window.AppState.username); 
-                initApp(); 
+                document.getElementById('settings-username').textContent = window.AppState.username;
+                document.getElementById('header-user').innerHTML = `مرحباً بك، <span class="font-bold text-slate-800 dark:text-white">${sanitizeInput(window.AppState.username)}</span>`;
                 window.showToast('تم تحديث الاسم', 'success');
             } 
+        };
+
+        // إدارة الصور
+        window.previewImage = function(event, previewId, type) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const dataUrl = e.target.result;
+                    document.getElementById(previewId).src = dataUrl;
+                    if (type === 'temp') window.tempUserImage = dataUrl;
+                }
+                reader.readAsDataURL(file);
+            }
+        };
+
+        window.updateProfileImage = function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const dataUrl = e.target.result;
+                    document.getElementById('settings-preview').src = dataUrl;
+                    window.AppState.userImage = dataUrl;
+                    localStorage.setItem('pos_user_image', dataUrl);
+                    window.showToast('تم تحديث الصورة بنجاح', 'success');
+                }
+                reader.readAsDataURL(file);
+            }
         };
 
         window.clearLocalData = function() { 
             if(confirm('هل أنت متأكد من تسجيل الخروج ومسح بيانات الجلسة؟ لن يتم مسح بيانات السحابة.')) { 
                 localStorage.removeItem('pos_username');
                 localStorage.removeItem('pos_transactions');
+                localStorage.removeItem('pos_user_image');
                 location.reload(); 
             } 
         };
@@ -1047,9 +1120,17 @@
         window.saveUsername = function() {
             const name = document.getElementById('username-input').value.trim();
             if (name) {
-                window.AppState.username = name; localStorage.setItem('pos_username', name);
+                window.AppState.username = name; 
+                localStorage.setItem('pos_username', name);
+                
+                if (window.tempUserImage) {
+                    window.AppState.userImage = window.tempUserImage;
+                    localStorage.setItem('pos_user_image', window.tempUserImage);
+                }
+
                 document.getElementById('onboarding-modal').classList.remove('active');
-                initApp(); window.showToast(`أهلاً بك يا ${name} 🌸`, 'success');
+                initApp(); 
+                window.showToast(`أهلاً بك يا ${name} 🌸`, 'success');
             } else window.showToast('يرجى إدخال اسم صحيح', 'error');
         };
 
@@ -1093,20 +1174,18 @@
         };
 
         window.copyMonthInvoice = async function() {
-            const monthVal = document.getElementById('month-selector').value; // Format: YYYY-MM
+            const monthVal = document.getElementById('month-selector').value;
             if(!monthVal) return window.showToast('يرجى اختيار الشهر', 'error');
 
             const txs = window.AppState.transactions.filter(t => t.date.startsWith(monthVal));
             if(txs.length === 0) return window.showToast('لا توجد مبيعات في هذا الشهر', 'error');
 
-            // Format for display (MM/YYYY)
             const [year, month] = monthVal.split('-');
             const displayMonth = `${month}/${year}`;
 
             let total = 0;
             let text = `🌸 فاتورة شهر ${displayMonth} 🌸\nالكاشير: ${window.AppState.username}\n------------------------\n`;
             
-            // Aggregate similar items to keep invoice clean
             const aggregated = {};
             txs.forEach(t => {
                 const key = `${t.name} (${t.category})`;
@@ -1142,7 +1221,6 @@
             }
         };
 
-        // Scroll Logic
         window.handleScroll = function() {
             const mainContent = document.getElementById('main-content');
             const scrollBtn = document.getElementById('scroll-to-top');
@@ -1159,7 +1237,6 @@
             document.getElementById('main-content').scrollTo({ top: 0, behavior: 'smooth' });
         };
 
-        // Network Listeners
         window.addEventListener('online', () => { setSyncIndicator('synced'); window.showToast('عاد الاتصال بالإنترنت', 'success'); });
         window.addEventListener('offline', () => { setSyncIndicator('offline'); window.showToast('أنت الآن تعمل بدون إنترنت (أوفلاين)', 'error'); });
 
@@ -1168,11 +1245,23 @@
             if (theme === 'dark') { document.documentElement.classList.add('dark'); document.getElementById('theme-icon').className = 'fa-solid fa-sun text-yellow-400'; }
             else { document.documentElement.classList.remove('dark'); document.getElementById('theme-icon').className = 'fa-solid fa-moon text-slate-600'; }
 
+            // تحديد الصورة الافتراضية
+            const defaultImageUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(window.AppState.username || 'User') + '&background=10b981&color=fff&size=128';
+            if (!window.AppState.userImage) {
+                window.AppState.userImage = defaultImageUrl;
+            }
+
             if (!window.AppState.username) {
                 document.getElementById('onboarding-modal').classList.add('active');
             } else {
                 document.getElementById('header-user').innerHTML = `مرحباً بك، <span class="font-bold text-slate-800 dark:text-white">${sanitizeInput(window.AppState.username)}</span>`;
                 document.getElementById('settings-username').textContent = sanitizeInput(window.AppState.username);
+                
+                // تحديث صورة الكاشير في الإعدادات
+                const settingsPreview = document.getElementById('settings-preview');
+                if(settingsPreview) {
+                    settingsPreview.src = window.AppState.userImage;
+                }
             }
 
             if(!navigator.onLine) setSyncIndicator('offline');
